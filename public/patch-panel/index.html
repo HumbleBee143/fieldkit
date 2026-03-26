@@ -764,6 +764,16 @@
           <button class="cable-colour-btn" style="background:#7c3aed" data-colour="purple" onclick="selectColour('purple',this)" title="Purple"></button>
         </div>
       </div>
+      <div class="modal-field" style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem">
+        <div>
+          <label>Switch</label>
+          <input type="text" id="editSwitch" placeholder="e.g. SW01">
+        </div>
+        <div>
+          <label>Switch Port</label>
+          <input type="text" id="editSwitchPort" placeholder="e.g. Gi0/1">
+        </div>
+      </div>
       <div class="modal-field">
         <label>Notes</label>
         <input type="text" id="editNotes" placeholder="Optional notes...">
@@ -998,6 +1008,8 @@ function openPortModal(panelId, portIndex) {
   document.getElementById('modalTitle').textContent = `Port ${portIndex}`;
   document.getElementById('editType').value = port.type || '';
   document.getElementById('editLabel').value = port.label || '';
+  document.getElementById('editSwitch').value = port.switch || '';
+  document.getElementById('editSwitchPort').value = port.switchPort || '';
   document.getElementById('editNotes').value = port.notes || '';
 
   selectedColour = port.cable || null;
@@ -1031,11 +1043,13 @@ function savePort() {
   if (!panel) return;
   const type = document.getElementById('editType').value;
   const label = document.getElementById('editLabel').value.trim();
+  const sw = document.getElementById('editSwitch').value.trim();
+  const swPort = document.getElementById('editSwitchPort').value.trim();
   const notes = document.getElementById('editNotes').value.trim();
-  if (!type && !label && !notes && !selectedColour) {
+  if (!type && !label && !notes && !selectedColour && !sw && !swPort) {
     delete panel.ports[editingPortIndex];
   } else {
-    panel.ports[editingPortIndex] = { type, label, notes, cable: selectedColour };
+    panel.ports[editingPortIndex] = { type, label, switch: sw, switchPort: swPort, notes, cable: selectedColour };
   }
   closeModal();
   render();
@@ -1105,6 +1119,8 @@ function printMap() {
             <th>Port</th>
             <th>Type</th>
             <th>Label</th>
+            <th>Switch</th>
+            <th>Switch Port</th>
             <th>Cable</th>
             <th>Notes</th>
           </tr>
@@ -1122,10 +1138,16 @@ function printMap() {
       const cableDot = p.cable
         ? `<span class="print-cable-dot" style="background:${CABLE_COLOURS[p.cable] || p.cable}"></span> ${p.cable}`
         : '—';
+      const swDest = p.switch && p.switchPort ? `${escHtml(p.switch)} ${escHtml(p.switchPort)}`
+        : p.switch ? escHtml(p.switch)
+        : p.switchPort ? escHtml(p.switchPort)
+        : '—';
       html += `<tr>
         <td>${key}</td>
         <td>${typeBadge}</td>
         <td class="label-col">${escHtml(p.label || '—')}</td>
+        <td>${escHtml(p.switch || '—')}</td>
+        <td>${escHtml(p.switchPort || '—')}</td>
         <td>${cableDot}</td>
         <td>${escHtml(p.notes || '—')}</td>
       </tr>`;

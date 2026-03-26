@@ -845,7 +845,9 @@ function removePanel(id) {
 
 function setActivePanel(id) {
   state.activePanel = id;
-  render();
+  renderSidebar();
+  const el = document.getElementById('editor_' + id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function getPanel(id) { return state.panels.find(p => p.id === id); }
@@ -906,7 +908,6 @@ function renderMain() {
   const main = document.getElementById('main');
   const empty = document.getElementById('emptyState');
 
-  // Remove old panel editors
   main.querySelectorAll('.panel-editor').forEach(e => e.remove());
 
   if (!state.panels.length) {
@@ -916,7 +917,6 @@ function renderMain() {
   empty.style.display = 'none';
 
   state.panels.forEach(panel => {
-    if (panel.id !== state.activePanel) return;
     const el = buildPanelEditor(panel);
     main.appendChild(el);
   });

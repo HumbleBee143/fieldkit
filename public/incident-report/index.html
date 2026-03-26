@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Incident Report Generator — Field-Kit</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0b1220;
+    --navy-mid: #111c2e;
+    --navy-light: #1a2840;
+    --navy-border: #1f3352;
+    --blue: #2d7dd2;
+    --blue-bright: #3d8fe8;
+    --accent: #00c8ff;
+    --white: #f0f5fc;
+    --slate: #8aa4c4;
+    --muted: #4a6484;
+    --sev-critical: #ff3b3b;
+    --sev-high: #ff8c00;
+    --sev-medium: #f5c400;
+    --sev-low: #00c864;
+    --status-resolved: #00c864;
+    --status-monitoring: #f5c400;
+    --status-ongoing: #ff3b3b;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Geist', sans-serif;
+    background: var(--navy);
+    color: var(--white);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Header */
+  header {
+    border-bottom: 1px solid var(--navy-border);
+    padding: 0 1.5rem;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    background: var(--navy);
+    z-index: 100;
+  }
+
+  .header-left { display: flex; align-items: center; gap: 1.25rem; }
+
+  .logo {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--white);
+    text-decoration: none;
+  }
+  .logo span { color: var(--accent); }
+
+  .tool-title {
+    font-size: 0.72rem;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding-left: 1.25rem;
+    border-left: 1px solid var(--navy-border);
+  }
+
+  .header-actions { display: flex; gap: 0.5rem; align-items: center; }
+
+  .btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.45rem 0.9rem;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--navy-border);
+    color: var(--slate);
+  }
+  .btn-ghost:hover { border-color: var(--slate); color: var(--white); }
+
+  .btn-primary {
+    background: var(--accent);
+    color: var(--navy);
+  }
+  .btn-primary:hover { background: #33d4ff; }
+
+  /* Main layout */
+  .workspace {
+    display: grid;
+    grid-template-columns: 420px 1fr;
+    flex: 1;
+    overflow: hidden;
+    height: calc(100vh - 56px);
+  }
+
+  /* Form panel */
+  .form-panel {
+    border-right: 1px solid var(--navy-border);
+    overflow-y: auto;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .form-panel::-webkit-scrollbar { width: 4px; }
+  .form-panel::-webkit-scrollbar-track { background: transparent; }
+  .form-panel::-webkit-scrollbar-thumb { background: var(--navy-border); border-radius: 2px; }
+
+  .form-section {
+    margin-bottom: 1.5rem;
+  }
+
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.58rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--navy-border);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .section-label .num {
+    color: var(--muted);
+  }
+
+  .form-row { margin-bottom: 0.6rem; }
+
+  .form-row label {
+    display: block;
+    font-size: 0.68rem;
+    font-weight: 500;
+    color: var(--slate);
+    margin-bottom: 0.25rem;
+    letter-spacing: 0.03em;
+  }
+
+  .form-row input,
+  .form-row select,
+  .form-row textarea {
+    width: 100%;
+    background: var(--navy-mid);
+    border: 1px solid var(--navy-border);
+    border-radius: 4px;
+    color: var(--white);
+    font-family: 'Geist', sans-serif;
+    font-size: 0.82rem;
+    padding: 0.5rem 0.65rem;
+    outline: none;
+    transition: border-color 0.15s;
+    appearance: none;
+  }
+
+  .form-row input:focus,
+  .form-row select:focus,
+  .form-row textarea:focus {
+    border-color: var(--accent);
+  }
+
+  .form-row textarea {
+    resize: vertical;
+    min-height: 72px;
+    line-height: 1.5;
+  }
+
+  .form-row select option { background: var(--navy-mid); }
+
+  .form-cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+  }
+
+  .form-cols-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0.6rem;
+  }
+
+  /* Severity select styling */
+  .sev-critical { color: var(--sev-critical) !important; }
+  .sev-high { color: var(--sev-high) !important; }
+  .sev-medium { color: var(--sev-medium) !important; }
+  .sev-low { color: var(--sev-low) !important; }
+
+  /* Duration display */
+  .duration-display {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--accent);
+    margin-top: 0.3rem;
+    min-height: 1rem;
+  }
+
+  /* Dynamic list */
+  .dynamic-list { display: flex; flex-direction: column; gap: 0.5rem; }
+
+  .dynamic-row {
+    display: grid;
+    gap: 0.4rem;
+    align-items: center;
+  }
+
+  .dynamic-row.timeline-row {
+    grid-template-columns: 110px 1fr 28px;
+  }
+
+  .dynamic-row.person-row {
+    grid-template-columns: 1fr 1fr 28px;
+  }
+
+  .dynamic-row input {
+    width: 100%;
+    background: var(--navy-mid);
+    border: 1px solid var(--navy-border);
+    border-radius: 4px;
+    color: var(--white);
+    font-family: 'Geist', sans-serif;
+    font-size: 0.8rem;
+    padding: 0.42rem 0.6rem;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .dynamic-row input:focus { border-color: var(--accent); }
+
+  .btn-remove {
+    width: 28px;
+    height: 28px;
+    background: transparent;
+    border: 1px solid var(--navy-border);
+    border-radius: 4px;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.15s, color 0.15s;
+    flex-shrink: 0;
+  }
+
+  .btn-remove:hover { border-color: var(--sev-critical); color: var(--sev-critical); }
+
+  .btn-add {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: transparent;
+    border: 1px dashed var(--navy-border);
+    border-radius: 4px;
+    color: var(--muted);
+    padding: 0.45rem;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+    margin-top: 0.35rem;
+    width: 100%;
+  }
+
+  .btn-add:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Preview panel */
+  .preview-panel {
+    overflow-y: auto;
+    background: #e8edf4;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1.5rem;
+    gap: 0;
+  }
+
+  .preview-panel::-webkit-scrollbar { width: 4px; }
+  .preview-panel::-webkit-scrollbar-track { background: transparent; }
+  .preview-panel::-webkit-scrollbar-thumb { background: #c0cad8; border-radius: 2px; }
+
+  /* Report document */
+  .report-doc {
+    background: #ffffff;
+    width: 100%;
+    max-width: 760px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+    border-radius: 2px;
+    font-family: 'Geist', sans-serif;
+    color: #1a1a2e;
+  }
+
+  .report-header {
+    padding: 2rem 2.5rem 1.5rem;
+    border-bottom: 3px solid #0b1220;
+  }
+
+  .report-meta-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+  }
+
+  .report-brand {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #8aa4c4;
+    letter-spacing: 0.1em;
+  }
+
+  .report-brand span { color: #00c8ff; }
+
+  .report-badges { display: flex; gap: 0.5rem; align-items: center; }
+
+  .report-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.55rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.55rem;
+    border-radius: 2px;
+  }
+
+  .badge-critical { background: rgba(255,59,59,0.12); color: #cc2020; border: 1px solid rgba(255,59,59,0.3); }
+  .badge-high { background: rgba(255,140,0,0.12); color: #c06000; border: 1px solid rgba(255,140,0,0.3); }
+  .badge-medium { background: rgba(245,196,0,0.12); color: #806600; border: 1px solid rgba(245,196,0,0.3); }
+  .badge-low { background: rgba(0,200,100,0.12); color: #007840; border: 1px solid rgba(0,200,100,0.3); }
+
+  .badge-resolved { background: rgba(0,200,100,0.12); color: #007840; border: 1px solid rgba(0,200,100,0.3); }
+  .badge-monitoring { background: rgba(245,196,0,0.12); color: #806600; border: 1px solid rgba(245,196,0,0.3); }
+  .badge-ongoing { background: rgba(255,59,59,0.12); color: #cc2020; border: 1px solid rgba(255,59,59,0.3); }
+
+  .report-title {
+    font-size: 1.55rem;
+    font-weight: 700;
+    color: #0b1220;
+    line-height: 1.2;
+    margin-bottom: 0.75rem;
+    letter-spacing: -0.02em;
+  }
+
+  .report-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+
+  .report-meta-item {}
+
+  .report-meta-item .meta-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.52rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #8aa4c4;
+    margin-bottom: 0.2rem;
+  }
+
+  .report-meta-item .meta-value {
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: #1a1a2e;
+  }
+
+  .report-body {
+    padding: 0 2.5rem 2rem;
+  }
+
+  .report-section {
+    padding: 1.25rem 0;
+    border-bottom: 1px solid #e0e6f0;
+  }
+
+  .report-section:last-child { border-bottom: none; }
+
+  .report-section-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #4a6484;
+    margin-bottom: 0.65rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .report-section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #e0e6f0;
+  }
+
+  .report-text {
+    font-size: 0.85rem;
+    line-height: 1.65;
+    color: #2a2a3e;
+  }
+
+  .report-systems {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  .system-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    background: #f0f4f8;
+    border: 1px solid #d0dae8;
+    border-radius: 3px;
+    padding: 0.2rem 0.55rem;
+    color: #2a3a5e;
+  }
+
+  .report-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+  }
+
+  .report-table th {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.58rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #4a6484;
+    text-align: left;
+    padding: 0.4rem 0.75rem;
+    background: #f5f7fa;
+    border-bottom: 2px solid #e0e6f0;
+  }
+
+  .report-table td {
+    padding: 0.55rem 0.75rem;
+    border-bottom: 1px solid #edf0f5;
+    vertical-align: top;
+    color: #2a2a3e;
+  }
+
+  .report-table td:first-child {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    white-space: nowrap;
+    color: #4a6484;
+    width: 120px;
+  }
+
+  /* People table — names should look like names, not timestamps */
+  .people-table td:first-child {
+    font-family: 'Geist', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: #1a1a2e;
+    width: auto;
+  }
+
+  .report-table tr:last-child td { border-bottom: none; }
+
+  .report-footer {
+    border-top: 2px solid #0b1220;
+    padding: 1rem 2.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8fafc;
+    gap: 1rem;
+  }
+
+  .report-prepared { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .report-prepared {
+    font-size: 0.75rem;
+    color: #4a6484;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .report-prepared strong {
+    color: #1a1a2e;
+  }
+
+  .report-watermark {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.58rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+    color: #8aa4c4;
+    letter-spacing: 0.06em;
+  }
+
+  .empty-placeholder {
+    color: #b0bac8;
+    font-style: italic;
+    font-size: 0.8rem;
+  }
+
+  /* Print styles */
+  @media print {
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+    body { background: white; }
+    header, .form-panel { display: none !important; }
+
+    .workspace {
+      display: block;
+      height: auto;
+    }
+
+    .preview-panel {
+      background: white;
+      padding: 0;
+      overflow: visible;
+    }
+
+    .report-doc {
+      box-shadow: none;
+      max-width: 100%;
+      width: 100%;
+    }
+
+    @page {
+      size: A4;
+      margin: 15mm;
+    }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <a href="/" class="logo">Field<span>-Kit</span></a>
+    <span class="tool-title">Incident Report Generator</span>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-ghost" onclick="loadJSON()">Load</button>
+    <button class="btn btn-ghost" onclick="saveJSON()">Save</button>
+    <button class="btn btn-primary" onclick="window.print()">Print / PDF</button>
+  </div>
+</header>
+
+<div class="workspace">
+
+  <!-- FORM PANEL -->
+  <div class="form-panel">
+
+    <!-- Section 1: Incident Details -->
+    <div class="form-section">
+      <div class="section-label"><span class="num">01</span> Incident Details</div>
+      <div class="form-row">
+        <label>Report Title</label>
+        <input type="text" id="f-title" placeholder="e.g. Email Server Outage — 24 March 2026" oninput="render()">
+      </div>
+      <div class="form-cols">
+        <div class="form-row">
+          <label>Reference / Ticket No.</label>
+          <input type="text" id="f-ref" placeholder="e.g. INC-2026-042" oninput="render()">
+        </div>
+        <div class="form-row">
+          <label>Date of Incident</label>
+          <input type="date" id="f-date" oninput="render()">
+        </div>
+      </div>
+      <div class="form-cols">
+        <div class="form-row">
+          <label>Start Time</label>
+          <input type="time" id="f-start" oninput="calcDuration(); render()">
+        </div>
+        <div class="form-row">
+          <label>End Time</label>
+          <input type="time" id="f-end" oninput="calcDuration(); render()">
+        </div>
+      </div>
+      <div class="duration-display" id="duration-display"></div>
+      <div class="form-cols">
+        <div class="form-row">
+          <label>Severity</label>
+          <select id="f-severity" onchange="updateSevStyle(); render()">
+            <option value="">— Select —</option>
+            <option value="critical">Critical</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>Status</label>
+          <select id="f-status" onchange="render()">
+            <option value="">— Select —</option>
+            <option value="resolved">Resolved</option>
+            <option value="monitoring">Monitoring</option>
+            <option value="ongoing">Ongoing</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 2: Affected Systems -->
+    <div class="form-section">
+      <div class="section-label"><span class="num">02</span> Affected Systems</div>
+      <div class="form-row">
+        <label>Systems / Services (one per line)</label>
+        <textarea id="f-systems" placeholder="Microsoft Exchange&#10;Remote Desktop Gateway&#10;Shared File Server" oninput="render()"></textarea>
+      </div>
+    </div>
+
+    <!-- Section 3: Summary -->
+    <div class="form-section">
+      <div class="section-label"><span class="num">03</span> Summary</div>
+      <div class="form-row">
+        <label>What happened (plain English)</label>
+        <textarea id="f-summary" placeholder="A brief overview of the incident for non-technical readers..." oninput="render()" style="min-height: 80px;"></textarea>
+      </div>
+    </div>
+
+    <!-- Section 4: Root Cause -->
+    <div class="form-section">
+      <div class="section-label"><span class="num">04</span> Root Cause</div>
+      <div class="form-row">
+        <label>What caused the incident</label>
+        <textarea id="f-rootcause" placeholder="Technical explanation of the root cause..." oninput="render()"></textarea>
+      </div>
+    </div>
+
+    <!-- Section 5: Timeline -->
+    <div class="form-section">
+      <div class="section-label"><span class="num">05</span> Timeline</div>
+      <div class="dynamic-list" id="timeline-list"></div>
+      <button class="btn-add" onclick="addTimelineRow()">+ Add Entry</button>
+    </div>
+
+    <!-- Section 6: Resolution -->
+    <div class="form-section">
+      <div class="section-label"><span class="num">06</span> Resolution</div>
+      <div class="form-row">
+        <label>What was done to fix it</label>
+        <textarea id="f-resolution" placeholder="Steps taken to resolve the incident..." oninput="render()"></textarea>
+      </div>
+    </div>
+
+    <!-- Section 7: Preventative Measures -->
+    <div class="form-section">
+      <div class="section-label"><span class="num">07</span> Preventative Measures</div>
+      <div class="form-row">
+        <label>What will be done to prevent recurrence</label>
+        <textarea id="f-preventative" placeholder="Actions to prevent this happening again..." oninput="render()"></textarea>
+      </div>
+    </div>
+
+    <!-- Section 8: People Involved -->
+    <div class="form-section">
+      <div class="section-label"><span class="num">08</span> People Involved</div>
+      <div class="dynamic-list" id="people-list"></div>
+      <button class="btn-add" onclick="addPersonRow()">+ Add Person</button>
+    </div>
+
+    <!-- Section 9: Prepared By -->
+    <div class="form-section">
+      <div class="section-label"><span class="num">09</span> Prepared By</div>
+      <div class="form-cols">
+        <div class="form-row">
+          <label>Name</label>
+          <input type="text" id="f-prepname" oninput="render()">
+        </div>
+        <div class="form-row">
+          <label>Role</label>
+          <input type="text" id="f-preptitle" oninput="render()">
+        </div>
+      </div>
+      <div class="form-cols">
+        <div class="form-row">
+          <label>Company</label>
+          <input type="text" id="f-prepcompany" oninput="render()">
+        </div>
+        <div class="form-row">
+          <label>Date Prepared</label>
+          <input type="date" id="f-prepdate" oninput="render()">
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- PREVIEW PANEL -->
+  <div class="preview-panel">
+    <div class="report-doc" id="report-output">
+      <!-- Rendered by JS -->
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // State
+  let timeline = [];
+  let people = [];
+
+  // Init defaults
+  function init() {
+    document.getElementById('f-date').value = today();
+    document.getElementById('f-prepdate').value = today();
+    render();
+  }
+
+  function today() {
+    return new Date().toISOString().split('T')[0];
+  }
+
+  function formatDate(d) {
+    if (!d) return '';
+    const [y, m, day] = d.split('-');
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return `${parseInt(day)} ${months[parseInt(m)-1]} ${y}`;
+  }
+
+  function calcDuration() {
+    const start = document.getElementById('f-start').value;
+    const end = document.getElementById('f-end').value;
+    const el = document.getElementById('duration-display');
+    if (!start || !end) { el.textContent = ''; return; }
+    const [sh, sm] = start.split(':').map(Number);
+    const [eh, em] = end.split(':').map(Number);
+    let mins = (eh * 60 + em) - (sh * 60 + sm);
+    if (mins < 0) mins += 1440;
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    el.textContent = h > 0 ? `Duration: ${h}h ${m}m` : `Duration: ${m} minutes`;
+  }
+
+  function updateSevStyle() {
+    const sel = document.getElementById('f-severity');
+    sel.className = '';
+    const v = sel.value;
+    if (v) sel.classList.add('sev-' + v);
+  }
+
+  // Timeline rows
+  function addTimelineRow(time = '', desc = '') {
+    const id = Date.now() + Math.random();
+    timeline.push({ id, time, desc });
+    renderTimelineList();
+    render();
+  }
+
+  function removeTimelineRow(id) {
+    timeline = timeline.filter(r => r.id !== id);
+    renderTimelineList();
+    render();
+  }
+
+  function renderTimelineList() {
+    const list = document.getElementById('timeline-list');
+    list.innerHTML = '';
+    timeline.forEach(row => {
+      const div = document.createElement('div');
+      div.className = 'dynamic-row timeline-row';
+      div.innerHTML = `
+        <input type="text" placeholder="09:32" value="${esc(row.time)}" oninput="updateTimeline(${row.id}, 'time', this.value)">
+        <input type="text" placeholder="What happened at this time" value="${esc(row.desc)}" oninput="updateTimeline(${row.id}, 'desc', this.value)">
+        <button class="btn-remove" onclick="removeTimelineRow(${row.id})" title="Remove">×</button>
+      `;
+      list.appendChild(div);
+    });
+  }
+
+  function updateTimeline(id, field, val) {
+    const row = timeline.find(r => r.id === id);
+    if (row) { row[field] = val; render(); }
+  }
+
+  // People rows
+  function addPersonRow(name = '', role = '') {
+    const id = Date.now() + Math.random();
+    people.push({ id, name, role });
+    renderPeopleList();
+    render();
+  }
+
+  function removePersonRow(id) {
+    people = people.filter(r => r.id !== id);
+    renderPeopleList();
+    render();
+  }
+
+  function renderPeopleList() {
+    const list = document.getElementById('people-list');
+    list.innerHTML = '';
+    people.forEach(row => {
+      const div = document.createElement('div');
+      div.className = 'dynamic-row person-row';
+      div.innerHTML = `
+        <input type="text" placeholder="Name" value="${esc(row.name)}" oninput="updatePerson(${row.id}, 'name', this.value)">
+        <input type="text" placeholder="Role / Company" value="${esc(row.role)}" oninput="updatePerson(${row.id}, 'role', this.value)">
+        <button class="btn-remove" onclick="removePersonRow(${row.id})" title="Remove">×</button>
+      `;
+      list.appendChild(div);
+    });
+  }
+
+  function updatePerson(id, field, val) {
+    const row = people.find(r => r.id === id);
+    if (row) { row[field] = val; render(); }
+  }
+
+  function esc(s) {
+    return (s || '').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function escText(s) {
+    return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function nl2br(s) {
+    return escText(s).replace(/\n/g, '<br>');
+  }
+
+  function v(id) {
+    return document.getElementById(id)?.value || '';
+  }
+
+  function getDuration() {
+    const el = document.getElementById('duration-display');
+    return el?.textContent || '';
+  }
+
+  // Render report
+  function render() {
+    const title = v('f-title');
+    const ref = v('f-ref');
+    const date = v('f-date');
+    const startTime = v('f-start');
+    const endTime = v('f-end');
+    const severity = v('f-severity');
+    const status = v('f-status');
+    const systems = v('f-systems');
+    const summary = v('f-summary');
+    const rootcause = v('f-rootcause');
+    const resolution = v('f-resolution');
+    const preventative = v('f-preventative');
+    const prepname = v('f-prepname');
+    const preptitle = v('f-preptitle');
+    const prepcompany = v('f-prepcompany');
+    const prepdate = v('f-prepdate');
+    const duration = getDuration();
+
+    const sevBadge = severity
+      ? `<span class="report-badge badge-${severity}">${severity}</span>`
+      : '';
+
+    const statusBadge = status
+      ? `<span class="report-badge badge-${status}">${status}</span>`
+      : '';
+
+    const systemTags = systems
+      ? systems.split('\n').filter(s => s.trim()).map(s => `<span class="system-tag">${escText(s.trim())}</span>`).join('')
+      : '<span class="empty-placeholder">No systems listed</span>';
+
+    const timelineRows = timeline.length
+      ? timeline.map(r => `<tr><td>${escText(r.time)}</td><td>${escText(r.desc)}</td></tr>`).join('')
+      : '<tr><td colspan="2" class="empty-placeholder" style="padding:0.75rem;">No timeline entries added</td></tr>';
+
+    const peopleRows = people.length
+      ? people.map(r => `<tr><td>${escText(r.name)}</td><td>${escText(r.role)}</td></tr>`).join('')
+      : '<tr><td colspan="2" class="empty-placeholder" style="padding:0.75rem;">No people listed</td></tr>';
+
+    const prepLine = [prepname, preptitle, prepcompany].filter(Boolean).join(' — ');
+
+    document.getElementById('report-output').innerHTML = `
+      <div class="report-header">
+        <div class="report-meta-top">
+          <span class="report-brand">Field<span>-Kit</span></span>
+          <div class="report-badges">
+            ${sevBadge}
+            ${statusBadge}
+          </div>
+        </div>
+        <div class="report-title">${title ? escText(title) : '<span class="empty-placeholder">Incident Report</span>'}</div>
+        <div class="report-meta-grid">
+          <div class="report-meta-item">
+            <div class="meta-label">Reference</div>
+            <div class="meta-value">${ref ? escText(ref) : '—'}</div>
+          </div>
+          <div class="report-meta-item">
+            <div class="meta-label">Date</div>
+            <div class="meta-value">${date ? formatDate(date) : '—'}</div>
+          </div>
+          <div class="report-meta-item">
+            <div class="meta-label">Time</div>
+            <div class="meta-value">${startTime && endTime ? `${startTime} – ${endTime}` : startTime || '—'}</div>
+          </div>
+          <div class="report-meta-item">
+            <div class="meta-label">Duration</div>
+            <div class="meta-value">${duration ? duration.replace('Duration: ', '') : '—'}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="report-body">
+
+        <div class="report-section">
+          <div class="report-section-title">Affected Systems</div>
+          <div class="report-systems">${systemTags}</div>
+        </div>
+
+        <div class="report-section">
+          <div class="report-section-title">Summary</div>
+          <div class="report-text">${summary ? nl2br(summary) : '<span class="empty-placeholder">No summary provided</span>'}</div>
+        </div>
+
+        <div class="report-section">
+          <div class="report-section-title">Root Cause</div>
+          <div class="report-text">${rootcause ? nl2br(rootcause) : '<span class="empty-placeholder">No root cause provided</span>'}</div>
+        </div>
+
+        <div class="report-section">
+          <div class="report-section-title">Timeline</div>
+          <table class="report-table">
+            <thead><tr><th>Time</th><th>Event</th></tr></thead>
+            <tbody>${timelineRows}</tbody>
+          </table>
+        </div>
+
+        <div class="report-section">
+          <div class="report-section-title">Resolution</div>
+          <div class="report-text">${resolution ? nl2br(resolution) : '<span class="empty-placeholder">No resolution provided</span>'}</div>
+        </div>
+
+        <div class="report-section">
+          <div class="report-section-title">Preventative Measures</div>
+          <div class="report-text">${preventative ? nl2br(preventative) : '<span class="empty-placeholder">No preventative measures provided</span>'}</div>
+        </div>
+
+        <div class="report-section">
+          <div class="report-section-title">People Involved</div>
+          <table class="report-table people-table">
+            <thead><tr><th>Name</th><th>Role</th></tr></thead>
+            <tbody>${peopleRows}</tbody>
+          </table>
+        </div>
+
+      </div>
+
+      <div class="report-footer">
+        <div class="report-prepared">
+          ${prepLine ? `Prepared by <strong>${escText(prepLine)}</strong>` : '<span class="empty-placeholder">Prepared by —</span>'}
+          ${prepdate ? ` &nbsp;·&nbsp; ${formatDate(prepdate)}` : ''}
+        </div>
+        <div class="report-watermark">Generated by Field-Kit &mdash; field-kit.co.uk</div>
+      </div>
+    `;
+  }
+
+  // Save / Load
+  function saveJSON() {
+    const data = {
+      title: v('f-title'), ref: v('f-ref'), date: v('f-date'),
+      start: v('f-start'), end: v('f-end'),
+      severity: v('f-severity'), status: v('f-status'),
+      systems: v('f-systems'), summary: v('f-summary'),
+      rootcause: v('f-rootcause'), resolution: v('f-resolution'),
+      preventative: v('f-preventative'),
+      timeline, people,
+      prepname: v('f-prepname'), preptitle: v('f-preptitle'),
+      prepcompany: v('f-prepcompany'), prepdate: v('f-prepdate')
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = (data.ref || data.title || 'incident-report').replace(/[^a-z0-9]/gi, '-').toLowerCase() + '.json';
+    a.click();
+  }
+
+  function loadJSON() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        try {
+          const d = JSON.parse(ev.target.result);
+          setVal('f-title', d.title); setVal('f-ref', d.ref);
+          setVal('f-date', d.date); setVal('f-start', d.start);
+          setVal('f-end', d.end); setVal('f-severity', d.severity);
+          setVal('f-status', d.status); setVal('f-systems', d.systems);
+          setVal('f-summary', d.summary); setVal('f-rootcause', d.rootcause);
+          setVal('f-resolution', d.resolution); setVal('f-preventative', d.preventative);
+          setVal('f-prepname', d.prepname); setVal('f-preptitle', d.preptitle);
+          setVal('f-prepcompany', d.prepcompany); setVal('f-prepdate', d.prepdate);
+          timeline = d.timeline || [];
+          people = d.people || [];
+          renderTimelineList();
+          renderPeopleList();
+          updateSevStyle();
+          calcDuration();
+          render();
+        } catch(e) { alert('Invalid JSON file'); }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  }
+
+  function setVal(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.value = val || '';
+  }
+
+  init();
+</script>
+</body>
+</html>

@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FieldKit — Tools for techs in the field</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0b1220;
+    --navy-mid: #111c2e;
+    --navy-light: #1a2840;
+    --navy-border: #1f3352;
+    --blue: #2d7dd2;
+    --blue-bright: #3d8fe8;
+    --accent: #00c8ff;
+    --white: #f0f5fc;
+    --slate: #8aa4c4;
+    --muted: #4a6484;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Geist', sans-serif;
+    background: var(--navy);
+    color: var(--white);
+    min-height: 100vh;
+  }
+
+  /* Header */
+  header {
+    border-bottom: 1px solid var(--navy-border);
+    padding: 0 2rem;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--white);
+    text-decoration: none;
+  }
+
+  .logo span { color: var(--accent); }
+
+  .tagline {
+    font-size: 0.72rem;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* Hero */
+  .hero {
+    padding: 5rem 2rem 4rem;
+    max-width: 800px;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  .hero-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 1.25rem;
+  }
+
+  .hero h1 {
+    font-size: 3rem;
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: 1.25rem;
+  }
+
+  .hero h1 span { color: var(--accent); }
+
+  .hero p {
+    font-size: 1.05rem;
+    color: var(--slate);
+    line-height: 1.7;
+    max-width: 520px;
+    margin: 0 auto;
+  }
+
+  /* Tools grid */
+  .tools-section {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 2rem 6rem;
+  }
+
+  .section-header {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--navy-border);
+  }
+
+  .section-header span {
+    color: var(--accent);
+    margin-right: 0.5rem;
+  }
+
+  .tools-group { margin-bottom: 3rem; }
+
+  .tools-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  .tool-card {
+    background: var(--navy-mid);
+    border: 1px solid var(--navy-border);
+    border-radius: 6px;
+    padding: 1.25rem;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.15s, transform 0.15s;
+    display: block;
+    position: relative;
+  }
+
+  .tool-card:hover {
+    border-color: var(--blue);
+    transform: translateY(-2px);
+  }
+
+  .tool-card.coming-soon {
+    opacity: 0.5;
+    cursor: default;
+    pointer-events: none;
+  }
+
+  .tool-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.5rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.18rem 0.45rem;
+    border-radius: 2px;
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+  }
+
+  .tool-badge.live {
+    background: rgba(0, 200, 100, 0.12);
+    border: 1px solid rgba(0, 200, 100, 0.3);
+    color: #00c864;
+  }
+
+  .tool-badge.soon {
+    background: rgba(100, 120, 160, 0.12);
+    border: 1px solid rgba(100, 120, 160, 0.2);
+    color: var(--muted);
+  }
+
+  .tool-icon {
+    font-size: 1.5rem;
+    margin-bottom: 0.75rem;
+    display: block;
+  }
+
+  .tool-name {
+    font-size: 0.92rem;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+    color: var(--white);
+  }
+
+  .tool-desc {
+    font-size: 0.75rem;
+    color: var(--slate);
+    line-height: 1.5;
+  }
+
+  /* Footer */
+  footer {
+    border-top: 1px solid var(--navy-border);
+    padding: 1.5rem 2rem;
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="/" class="logo">Field<span>Kit</span></a>
+  <div class="tagline">Tools for techs in the field</div>
+</header>
+
+<section class="hero">
+  <div class="hero-label">Free IT Tools</div>
+  <h1>Sharp tools for<br><span>real field work</span></h1>
+  <p>No logins. No subscriptions. Just clean, fast tools built for IT technicians who do hands-on work.</p>
+</section>
+
+<section class="tools-section">
+
+  <div class="tools-group">
+    <div class="section-header"><span>01</span> After the visit</div>
+    <div class="tools-grid">
+      <a href="/site-card" class="tool-card">
+        <span class="tool-badge live">Live</span>
+        <span class="tool-icon">🗂️</span>
+        <div class="tool-name">Site Summary Card</div>
+        <div class="tool-desc">Generate a clean one-page site passport — the card that goes on the rack door.</div>
+      </a>
+      <div class="tool-card coming-soon">
+        <span class="tool-badge soon">Coming soon</span>
+        <span class="tool-icon">📋</span>
+        <div class="tool-name">Incident Report Generator</div>
+        <div class="tool-desc">Create a professional post-incident report to send to clients or managers.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tools-group">
+    <div class="section-header"><span>02</span> On site</div>
+    <div class="tools-grid">
+      <div class="tool-card coming-soon">
+        <span class="tool-badge soon">Coming soon</span>
+        <span class="tool-icon">🔌</span>
+        <div class="tool-name">Patch Panel Label Generator</div>
+        <div class="tool-desc">Label your patch panel ports and print a clean port map for the cabinet door.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tools-group">
+    <div class="section-header"><span>03</span> Before the visit</div>
+    <div class="tools-grid">
+      <div class="tool-card coming-soon">
+        <span class="tool-badge soon">Coming soon</span>
+        <span class="tool-icon">🌐</span>
+        <div class="tool-name">IP / VLAN Planner</div>
+        <div class="tool-desc">Plan your network subnets and VLANs visually. Export to PDF.</div>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<footer>
+  FieldKit &mdash; fieldkit.uk &mdash; Free tools for IT professionals
+</footer>
+
+</body>
+</html>

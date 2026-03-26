@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Site Summary Card — FieldKit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0b1220;
+    --navy-mid: #111c2e;
+    --navy-light: #1a2840;
+    --navy-border: #1f3352;
+    --blue: #2d7dd2;
+    --blue-bright: #3d8fe8;
+    --slate: #8aa4c4;
+    --slate-light: #b8cee4;
+    --white: #f0f5fc;
+    --muted: #4a6484;
+    --accent: #00c8ff;
+    --card-bg: #ffffff;
+    --card-header: #0f2040;
+    --card-header-2: #1a3560;
+    --card-text: #1a2840;
+    --card-muted: #6b7c93;
+    --card-border: #d0dce8;
+    --card-accent: #2d7dd2;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Geist', sans-serif;
+    background: var(--navy);
+    color: var(--white);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── Header ─────────────────────────────── */
+  .app-header {
+    background: var(--navy-mid);
+    border-bottom: 1px solid var(--navy-border);
+    padding: 0 2rem;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  .app-logo {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--white);
+    letter-spacing: -0.02em;
+  }
+
+  .app-logo span { color: var(--accent); }
+
+  .app-tagline {
+    font-size: 0.72rem;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* ── Layout ─────────────────────────────── */
+  .workspace {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    flex: 1;
+    overflow: hidden;
+    height: calc(100vh - 56px);
+  }
+
+  /* ── Form Panel ─────────────────────────── */
+  .form-panel {
+    background: var(--navy-mid);
+    border-right: 1px solid var(--navy-border);
+    overflow-y: auto;
+    padding: 1.5rem;
+  }
+
+  .form-panel::-webkit-scrollbar { width: 4px; }
+  .form-panel::-webkit-scrollbar-track { background: transparent; }
+  .form-panel::-webkit-scrollbar-thumb { background: var(--navy-border); border-radius: 2px; }
+
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.75rem;
+    margin-top: 1.5rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--navy-border);
+  }
+
+  .section-label:first-child { margin-top: 0; }
+
+  .field {
+    margin-bottom: 0.7rem;
+  }
+
+  label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: var(--slate);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 0.3rem;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  textarea {
+    width: 100%;
+    background: var(--navy-light);
+    border: 1px solid var(--navy-border);
+    border-radius: 4px;
+    color: var(--white);
+    font-family: 'Geist', sans-serif;
+    font-size: 0.82rem;
+    padding: 0.45rem 0.65rem;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  input[type="text"]:focus,
+  input[type="email"]:focus,
+  input[type="tel"]:focus,
+  textarea:focus {
+    border-color: var(--blue);
+  }
+
+  input::placeholder, textarea::placeholder { color: var(--muted); }
+
+  textarea { resize: vertical; min-height: 60px; }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+
+  /* Servers */
+  .servers-list { display: flex; flex-direction: column; gap: 0.4rem; }
+
+  .server-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 0.4rem;
+    align-items: center;
+  }
+
+  .btn-remove {
+    background: none;
+    border: 1px solid var(--navy-border);
+    color: var(--muted);
+    border-radius: 3px;
+    width: 26px;
+    height: 26px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    line-height: 1;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .btn-remove:hover { border-color: #c0392b; color: #e74c3c; }
+
+  .btn-add {
+    background: none;
+    border: 1px dashed var(--navy-border);
+    color: var(--slate);
+    border-radius: 4px;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.75rem;
+    font-family: 'Geist', sans-serif;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 0.4rem;
+    transition: all 0.15s;
+    letter-spacing: 0.04em;
+  }
+
+  .btn-add:hover { border-color: var(--blue); color: var(--blue-bright); }
+
+  /* Print button */
+  .print-btn {
+    background: var(--blue);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 0.7rem 1.5rem;
+    font-family: 'Geist', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 1.5rem;
+    letter-spacing: 0.04em;
+    transition: background 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .print-btn:hover { background: var(--blue-bright); }
+
+  .print-btn svg { width: 16px; height: 16px; }
+
+  /* ── Preview Panel ───────────────────────── */
+  .preview-panel {
+    background: #c8d4e0;
+    overflow-y: auto;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 2.5rem 2rem;
+  }
+
+  .preview-panel::-webkit-scrollbar { width: 6px; }
+  .preview-panel::-webkit-scrollbar-track { background: transparent; }
+  .preview-panel::-webkit-scrollbar-thumb { background: #a0b0c0; border-radius: 3px; }
+
+  /* ── The Card ────────────────────────────── */
+  .card {
+    width: 210mm;
+    min-height: 148mm;
+    background: var(--card-bg);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.25), 0 2px 8px rgba(0,0,0,0.1);
+    border-radius: 3px;
+    overflow: hidden;
+    font-family: 'Geist', sans-serif;
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .card-header {
+    background: linear-gradient(135deg, var(--card-header) 0%, var(--card-header-2) 100%);
+    padding: 1.1rem 1.4rem 1rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card-header::before {
+    content: '';
+    position: absolute;
+    top: -20px;
+    right: -20px;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: rgba(45, 125, 210, 0.15);
+  }
+
+  .card-header::after {
+    content: '';
+    position: absolute;
+    bottom: -30px;
+    right: 60px;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: rgba(0, 200, 255, 0.07);
+  }
+
+  .card-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .card-site-name {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+    max-width: 70%;
+  }
+
+  .card-site-name.placeholder { color: rgba(255,255,255,0.3); font-style: italic; font-weight: 400; }
+
+  .card-badge {
+    background: rgba(0, 200, 255, 0.15);
+    border: 1px solid rgba(0, 200, 255, 0.3);
+    color: #00c8ff;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.55rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.5rem;
+    border-radius: 2px;
+    white-space: nowrap;
+  }
+
+  .card-address {
+    font-size: 0.72rem;
+    color: rgba(255,255,255,0.5);
+    margin-top: 0.25rem;
+    font-weight: 400;
+  }
+
+  .card-divider {
+    height: 1px;
+    background: rgba(255,255,255,0.08);
+    margin: 0.7rem 0 0;
+  }
+
+  /* Card body */
+  .card-body {
+    padding: 0.9rem 1.4rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 1.5rem;
+  }
+
+  .card-section-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.55rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--card-accent);
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.25rem;
+    border-bottom: 1.5px solid var(--card-accent);
+    opacity: 0.8;
+  }
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: 125px 1fr;
+    gap: 0.18rem 0.5rem;
+    margin-bottom: 0.8rem;
+  }
+
+  .card-key {
+    font-size: 0.6rem;
+    font-weight: 600;
+    color: var(--card-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+    padding-top: 0.02rem;
+  }
+
+  .card-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.62rem;
+    color: var(--card-text);
+    word-break: break-all;
+  }
+
+  .card-val.empty { color: #ccc; font-style: italic; font-family: 'Geist', sans-serif; }
+
+  /* Servers table */
+  .card-servers-section {
+    grid-column: 1 / -1;
+    margin-top: 0.1rem;
+  }
+
+  .card-servers-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.6rem;
+  }
+
+  .card-servers-table th {
+    background: #f0f5fa;
+    font-size: 0.55rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--card-muted);
+    padding: 0.25rem 0.5rem;
+    text-align: left;
+    border-bottom: 1px solid var(--card-border);
+  }
+
+  .card-servers-table td {
+    padding: 0.22rem 0.5rem;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--card-text);
+    border-bottom: 1px solid #f0f4f8;
+  }
+
+  .card-servers-table tr:last-child td { border-bottom: none; }
+
+  .card-servers-table td:first-child { font-family: 'Geist', sans-serif; font-weight: 500; }
+
+  /* Notes */
+  .card-notes-section {
+    grid-column: 1 / -1;
+    margin-top: 0.5rem;
+  }
+
+  .card-notes-text {
+    font-size: 0.62rem;
+    color: var(--card-text);
+    line-height: 1.5;
+    background: #f8fafc;
+    border: 1px solid var(--card-border);
+    border-radius: 2px;
+    padding: 0.4rem 0.6rem;
+    min-height: 30px;
+  }
+
+  /* Footer */
+  .card-footer {
+    background: #f8fafc;
+    border-top: 1px solid var(--card-border);
+    padding: 0.4rem 1.4rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .card-footer-date {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.55rem;
+    color: var(--card-muted);
+  }
+
+  .card-watermark {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.5rem;
+    color: #bbc8d4;
+    letter-spacing: 0.06em;
+  }
+
+  /* ── Print Styles ────────────────────────── */
+  @media print {
+    @page {
+      size: A4 landscape;
+      margin: 10mm;
+    }
+
+    body { background: white; }
+
+    .app-header,
+    .form-panel { display: none !important; }
+
+    .workspace {
+      display: block;
+      height: auto;
+    }
+
+    .preview-panel {
+      background: white;
+      padding: 0;
+      overflow: visible;
+    }
+
+    .card {
+      width: 100%;
+      box-shadow: none;
+      border-radius: 0;
+    }
+  }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="app-logo">Field<span>Kit</span></div>
+  <div class="app-tagline">Site Summary Card Generator</div>
+</header>
+
+<div class="workspace">
+
+  <!-- ── Form Panel ── -->
+  <div class="form-panel">
+
+    <div class="section-label">Site Details</div>
+
+    <div class="field">
+      <label>Client / Site Name</label>
+      <input type="text" id="siteName" placeholder="Acme Ltd — Head Office" oninput="update()">
+    </div>
+    <div class="field">
+      <label>Site Address</label>
+      <input type="text" id="siteAddress" placeholder="123 Business Park, Newcastle, NE1 1AA" oninput="update()">
+    </div>
+
+    <div class="section-label">Network</div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>ISP Name</label>
+        <input type="text" id="ispName" placeholder="BT Business" oninput="update()">
+      </div>
+      <div class="field">
+        <label>ISP Account No.</label>
+        <input type="text" id="ispAccount" placeholder="BT-12345678" oninput="update()">
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>Router / Firewall IP</label>
+        <input type="text" id="routerIp" placeholder="192.168.1.1" oninput="update()">
+      </div>
+      <div class="field">
+        <label>Subnet Mask</label>
+        <input type="text" id="subnetMask" placeholder="255.255.255.0" oninput="update()">
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>Default Gateway</label>
+        <input type="text" id="gateway" placeholder="192.168.1.1" oninput="update()">
+      </div>
+      <div class="field">
+        <label>Domain Name</label>
+        <input type="text" id="domainName" placeholder="acme.local" oninput="update()">
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>Primary DNS</label>
+        <input type="text" id="dns1" placeholder="8.8.8.8" oninput="update()">
+      </div>
+      <div class="field">
+        <label>Secondary DNS</label>
+        <input type="text" id="dns2" placeholder="8.8.4.4" oninput="update()">
+      </div>
+    </div>
+
+    <div class="section-label">Key Servers</div>
+
+    <div class="servers-list" id="serversList"></div>
+    <button class="btn-add" onclick="addServer()">+ Add Server</button>
+
+    <div class="section-label">Admin Contact</div>
+
+    <div class="field">
+      <label>Name</label>
+      <input type="text" id="adminName" placeholder="John Smith" oninput="update()">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Phone</label>
+        <input type="tel" id="adminPhone" placeholder="0191 000 0000" oninput="update()">
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="adminEmail" placeholder="john@acme.co.uk" oninput="update()">
+      </div>
+    </div>
+
+    <div class="section-label">Additional Info</div>
+
+    <div class="field">
+      <label>Backup Schedule</label>
+      <input type="text" id="backupSchedule" placeholder="Nightly 2am — Veeam to NAS + offsite" oninput="update()">
+    </div>
+    <div class="field">
+      <label>Notes</label>
+      <textarea id="notes" placeholder="Any additional information..." oninput="update()"></textarea>
+    </div>
+
+    <button class="print-btn" onclick="window.print()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="6 9 6 2 18 2 18 9"></polyline>
+        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+        <rect x="6" y="14" width="12" height="8"></rect>
+      </svg>
+      Print / Save as PDF
+    </button>
+
+  </div>
+
+  <!-- ── Preview Panel ── -->
+  <div class="preview-panel">
+    <div class="card" id="card">
+
+      <div class="card-header">
+        <div class="card-header-top">
+          <div class="card-site-name placeholder" id="previewSiteName">Site Name</div>
+          <div class="card-badge">Site Passport</div>
+        </div>
+        <div class="card-address" id="previewAddress"></div>
+        <div class="card-divider"></div>
+      </div>
+
+      <div class="card-body">
+
+        <!-- Left column: Network -->
+        <div>
+          <div class="card-section-title">Network</div>
+          <div class="card-grid" id="networkGrid"></div>
+
+          <div class="card-section-title">Admin Contact</div>
+          <div class="card-grid" id="contactGrid"></div>
+        </div>
+
+        <!-- Right column: ISP + Backup -->
+        <div>
+          <div class="card-section-title">ISP</div>
+          <div class="card-grid" id="ispGrid"></div>
+
+          <div class="card-section-title">Backup</div>
+          <div class="card-grid" id="backupGrid"></div>
+        </div>
+
+        <!-- Full width: Servers -->
+        <div class="card-servers-section" id="serversSection" style="display:none">
+          <div class="card-section-title">Key Servers</div>
+          <table class="card-servers-table">
+            <thead>
+              <tr>
+                <th>Server Name</th>
+                <th>IP Address</th>
+              </tr>
+            </thead>
+            <tbody id="serversTableBody"></tbody>
+          </table>
+        </div>
+
+        <!-- Full width: Notes -->
+        <div class="card-notes-section" id="notesSection" style="display:none">
+          <div class="card-section-title">Notes</div>
+          <div class="card-notes-text" id="previewNotes"></div>
+        </div>
+
+      </div>
+
+      <div class="card-footer">
+        <div class="card-footer-date" id="footerDate"></div>
+        <div class="card-watermark">Generated by FieldKit</div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+  let serverCount = 0;
+
+  function v(id) {
+    return document.getElementById(id)?.value?.trim() || '';
+  }
+
+  function val(text, fallback) {
+    return text
+      ? `<span class="card-val">${text}</span>`
+      : `<span class="card-val empty">${fallback || '—'}</span>`;
+  }
+
+  function row(key, value, fallback) {
+    if (!value && !fallback) return '';
+    return `<span class="card-key">${key}</span>${val(value, fallback)}`;
+  }
+
+  function addServer() {
+    serverCount++;
+    const id = `server_${serverCount}`;
+    const list = document.getElementById('serversList');
+    const div = document.createElement('div');
+    div.className = 'server-row';
+    div.id = id;
+    div.innerHTML = `
+      <input type="text" placeholder="Server name" oninput="update()" data-server-name>
+      <input type="text" placeholder="IP address" oninput="update()" data-server-ip>
+      <button class="btn-remove" onclick="removeServer('${id}')">×</button>
+    `;
+    list.appendChild(div);
+    update();
+  }
+
+  function removeServer(id) {
+    document.getElementById(id)?.remove();
+    update();
+  }
+
+  function getServers() {
+    const rows = document.querySelectorAll('#serversList .server-row');
+    const servers = [];
+    rows.forEach(row => {
+      const name = row.querySelector('[data-server-name]')?.value?.trim();
+      const ip = row.querySelector('[data-server-ip]')?.value?.trim();
+      if (name || ip) servers.push({ name: name || '—', ip: ip || '—' });
+    });
+    return servers;
+  }
+
+  function update() {
+    const siteName = v('siteName');
+    const address = v('siteAddress');
+
+    // Header
+    const nameEl = document.getElementById('previewSiteName');
+    if (siteName) {
+      nameEl.textContent = siteName;
+      nameEl.classList.remove('placeholder');
+    } else {
+      nameEl.textContent = 'Site Name';
+      nameEl.classList.add('placeholder');
+    }
+    document.getElementById('previewAddress').textContent = address;
+
+    // Network grid
+    document.getElementById('networkGrid').innerHTML = `
+      ${row('Router', v('routerIp'))}
+      ${row('Subnet', v('subnetMask'))}
+      ${row('Gateway', v('gateway'))}
+      ${row('Primary DNS', v('dns1'))}
+      ${row('Secondary DNS', v('dns2'))}
+      ${row('Domain', v('domainName'))}
+    `;
+
+    // ISP grid
+    document.getElementById('ispGrid').innerHTML = `
+      ${row('Provider', v('ispName'))}
+      ${row('Account', v('ispAccount'))}
+    `;
+
+    // Backup grid
+    document.getElementById('backupGrid').innerHTML = `
+      ${row('Schedule', v('backupSchedule'))}
+    `;
+
+    // Contact grid
+    document.getElementById('contactGrid').innerHTML = `
+      ${row('Name', v('adminName'))}
+      ${row('Phone', v('adminPhone'))}
+      ${row('Email', v('adminEmail'))}
+    `;
+
+    // Servers
+    const servers = getServers();
+    const serversSection = document.getElementById('serversSection');
+    if (servers.length > 0) {
+      serversSection.style.display = 'block';
+      document.getElementById('serversTableBody').innerHTML = servers.map(s =>
+        `<tr><td>${s.name}</td><td>${s.ip}</td></tr>`
+      ).join('');
+    } else {
+      serversSection.style.display = 'none';
+    }
+
+    // Notes
+    const notes = v('notes');
+    const notesSection = document.getElementById('notesSection');
+    if (notes) {
+      notesSection.style.display = 'block';
+      document.getElementById('previewNotes').textContent = notes;
+    } else {
+      notesSection.style.display = 'none';
+    }
+
+    // Footer date
+    const now = new Date();
+    document.getElementById('footerDate').textContent =
+      `Generated ${now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}`;
+  }
+
+  // Init
+  update();
+</script>
+</body>
+</html>

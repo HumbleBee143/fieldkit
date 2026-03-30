@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Field-Kit | IP / VLAN Planner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-0: #05080f;
+      --bg-1: #0d1526;
+      --bg-2: #14233d;
+      --line: #2a4165;
+      --line-soft: #1e3150;
+      --text: #e7f0ff;
+      --muted: #93a8c8;
+      --panel: rgba(9, 18, 34, 0.84);
+      --cyan: #48d2ff;
+      --lime: #9dea88;
+      --amber: #ffd166;
+      --rose: #ff7a8f;
+      --chip-bg: rgba(15, 30, 54, 0.85);
+      --glow: 0 18px 35px rgba(5, 13, 26, 0.5);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 12% -8%, rgba(72, 210, 255, 0.2), transparent 45%),
+        radial-gradient(circle at 85% 8%, rgba(157, 234, 136, 0.16), transparent 40%),
+        linear-gradient(165deg, var(--bg-0), var(--bg-1) 40%, var(--bg-2));
+      padding: 24px;
+    }
+
+    .app {
+      max-width: 1260px;
+      margin: 0 auto;
+      display: grid;
+      gap: 16px;
+    }
+
+    .panel {
+      border: 1px solid var(--line-soft);
+      background: var(--panel);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: var(--glow);
+      backdrop-filter: blur(8px);
+      animation: rise 360ms ease both;
+    }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero {
+      display: grid;
+      gap: 8px;
+      border-color: var(--line);
+      background:
+        linear-gradient(130deg, rgba(25, 49, 84, 0.5), rgba(7, 14, 28, 0.5)),
+        repeating-linear-gradient(90deg, rgba(63, 102, 156, 0.12), rgba(63, 102, 156, 0.12) 1px, transparent 1px, transparent 48px);
+    }
+
+    .eyebrow {
+      font-family: "Chakra Petch", monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--cyan);
+    }
+
+    h1, h2 { margin: 0; font-family: "Chakra Petch", monospace; }
+    h1 { font-size: clamp(1.6rem, 3.2vw, 2.3rem); line-height: 1.1; }
+    h2 { font-size: 1.1rem; color: #d3e3ff; }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+      max-width: 68ch;
+      font-size: 0.96rem;
+    }
+
+    .toolbar {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      align-items: end;
+    }
+
+    label {
+      display: grid;
+      gap: 4px;
+      color: var(--muted);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .col-4 { grid-column: span 4; }
+    .col-3 { grid-column: span 3; }
+    .col-2 { grid-column: span 2; }
+
+    input, button {
+      font: inherit;
+      color: var(--text);
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(9, 20, 39, 0.9);
+      padding: 10px 12px;
+    }
+
+    input:focus-visible, button:focus-visible {
+      outline: 2px solid var(--cyan);
+      outline-offset: 1px;
+    }
+
+    button {
+      cursor: pointer;
+      font-family: "Chakra Petch", monospace;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      transition: transform 0.12s ease, border-color 0.12s ease;
+      white-space: nowrap;
+    }
+
+    button:hover { transform: translateY(-1px); border-color: #4f7ab0; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .btn-primary { background: linear-gradient(140deg, #204f85, #24406b); }
+    .btn-success { background: linear-gradient(140deg, #226046, #173f2f); }
+    .btn-print { background: linear-gradient(140deg, #5b4a22, #40351b); }
+    .btn-danger { background: linear-gradient(140deg, #5a2431, #3f1a23); }
+    .btn-ghost { background: rgba(9, 20, 39, 0.7); }
+
+    .layout {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: 1.2fr 0.8fr;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      min-width: 760px;
+    }
+
+    .table-wrap { overflow-x: auto; }
+
+    th, td {
+      text-align: left;
+      border-bottom: 1px solid var(--line-soft);
+      padding: 8px 6px;
+      vertical-align: middle;
+    }
+
+    th {
+      font-family: "Chakra Petch", monospace;
+      color: var(--muted);
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+    }
+
+    td input { width: 100%; min-width: 84px; }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .chip {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-family: "Chakra Petch", monospace;
+      font-size: 0.78rem;
+      letter-spacing: 0.04em;
+      background: var(--chip-bg);
+    }
+
+    .chip.used { border-color: #3f7cb0; color: #bfe4ff; }
+    .chip.free { border-color: #668c58; color: #d5ffb8; }
+    .chip.conflicts { border-color: #955161; color: #ffd1da; }
+
+    .map {
+      display: flex;
+      width: 100%;
+      min-height: 56px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      overflow: hidden;
+      background: rgba(6, 12, 22, 0.9);
+    }
+
+    .segment {
+      min-width: 3px;
+      border-right: 1px solid rgba(0, 0, 0, 0.24);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+      color: #031427;
+      font-family: "Chakra Petch", monospace;
+      font-size: 0.68rem;
+      text-align: center;
+    }
+
+    .segment.free {
+      color: #bdd4f1;
+      background: repeating-linear-gradient(-45deg, rgba(74, 103, 138, 0.28), rgba(74, 103, 138, 0.28) 7px, rgba(74, 103, 138, 0.18) 7px, rgba(74, 103, 138, 0.18) 14px);
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid var(--line-soft);
+      border-radius: 8px;
+      padding: 5px 8px;
+      background: rgba(9, 20, 39, 0.56);
+    }
+
+    .swatch {
+      width: 12px;
+      height: 12px;
+      border-radius: 4px;
+      flex: 0 0 auto;
+    }
+
+    .status-list {
+      margin: 0;
+      padding-left: 18px;
+      display: grid;
+      gap: 6px;
+      line-height: 1.45;
+      font-size: 0.92rem;
+    }
+
+    .status-list.ok li { color: #bff3d0; }
+    .status-list.warn li { color: #ffe8ad; }
+    .status-list.danger li { color: #ffd0d8; }
+
+    .watermark {
+      display: none;
+      text-align: center;
+      font-size: 0.75rem;
+      color: #97a6be;
+      margin-top: 2rem;
+    }
+
+    .hide-watermark .watermark { display: none !important; }
+
+    @media (max-width: 1120px) {
+      .layout { grid-template-columns: 1fr; }
+      .toolbar { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+      .col-4 { grid-column: span 3; }
+      .col-3 { grid-column: span 3; }
+      .col-2 { grid-column: span 3; }
+    }
+
+    @media (max-width: 720px) {
+      body { padding: 14px; }
+      .toolbar { grid-template-columns: 1fr; }
+      .col-4, .col-3, .col-2 { grid-column: span 1; }
+      .panel { padding: 12px; border-radius: 12px; }
+      th, td { padding: 6px 4px; }
+      input, button { padding: 9px 10px; }
+    }
+
+    @media print {
+      body {
+        background: white;
+        color: black;
+        padding: 0;
+      }
+
+      .panel {
+        background: white;
+        border: 1px solid #bbb;
+        box-shadow: none;
+        backdrop-filter: none;
+        break-inside: avoid;
+      }
+
+      .toolbar,
+      .actions,
+      button,
+      .no-print { display: none !important; }
+
+      input {
+        border: none;
+        background: transparent;
+        color: black;
+        padding: 0;
+      }
+
+      th, td { border-bottom-color: #ddd; }
+      .watermark { display: block; color: #777; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app" id="appRoot">
+    <section class="panel hero">
+      <div class="eyebrow">Field-Kit • Pre-Visit Planning</div>
+      <h1>IP / VLAN Planner</h1>
+      <p class="subtitle">Define a parent network, add VLANs with purpose and host demand, auto-allocate subnet ranges, detect conflicts, and print a handover-ready plan.</p>
+    </section>
+
+    <section class="panel no-print">
+      <h2>Planner Controls</h2>
+      <div class="toolbar" style="margin-top:10px;">
+        <label class="col-3">
+          Parent CIDR
+          <input id="baseCidr" value="192.168.0.0/16" aria-label="Parent CIDR">
+        </label>
+        <label class="col-3">
+          Site Name
+          <input id="siteName" placeholder="Example: HQ Core" aria-label="Site name">
+        </label>
+        <label class="col-2">
+          Pro Key
+          <input id="proKeyInput" placeholder="VALID_KEY" aria-label="Pro key">
+        </label>
+        <button id="saveProKeyBtn" class="btn-ghost col-2" type="button">Save Pro Key</button>
+        <button id="toggleWatermarkBtn" class="btn-ghost col-2" type="button" disabled>Hide Watermark (Pro)</button>
+      </div>
+      <div class="toolbar actions" style="margin-top:10px;">
+        <button id="addVlanBtn" class="btn-primary col-2" type="button">Add VLAN</button>
+        <button id="allocateBtn" class="btn-success col-2" type="button">Allocate Subnets</button>
+        <button id="printBtn" class="btn-print col-2" type="button">Export PDF</button>
+      </div>
+    </section>
+
+    <section class="layout">
+      <section class="panel">
+        <h2>VLAN Requests</h2>
+        <div class="table-wrap" style="margin-top:8px;">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:84px;">VLAN</th>
+                <th style="width:160px;">Name</th>
+                <th>Purpose</th>
+                <th style="width:94px;">Hosts</th>
+                <th style="width:140px;">Allocated CIDR</th>
+                <th style="width:72px;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="vlanRows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Capacity & Conflicts</h2>
+        <div class="chips">
+          <span class="chip used" id="chipUsed">Used: 0 IPs</span>
+          <span class="chip free" id="chipFree">Free: 0 IPs</span>
+          <span class="chip conflicts" id="chipConflicts">Conflicts: 0</span>
+        </div>
+        <ul id="messages" class="status-list"></ul>
+      </section>
+    </section>
+
+    <section class="panel">
+      <h2>Allocation Map</h2>
+      <div id="allocationMap" class="map" aria-label="Subnet allocation map" style="margin-top:8px;"></div>
+      <div id="legend" class="legend"></div>
+    </section>
+
+    <div class="watermark">Generated by Field-Kit — field-kit.co.uk</div>
+  </main>
+
+  <script>
+    (function () {
+      const state = {
+        baseCidr: "192.168.0.0/16",
+        vlans: [
+          row(10, "Staff", "Corporate devices", 200),
+          row(20, "Voice", "IP telephony", 60),
+          row(30, "Guest", "Guest Wi-Fi", 250)
+        ],
+        allocation: [],
+        conflicts: [],
+        watermarkHidden: false
+      };
+
+      const el = {
+        appRoot: document.getElementById("appRoot"),
+        baseCidr: document.getElementById("baseCidr"),
+        siteName: document.getElementById("siteName"),
+        addVlanBtn: document.getElementById("addVlanBtn"),
+        allocateBtn: document.getElementById("allocateBtn"),
+        printBtn: document.getElementById("printBtn"),
+        vlanRows: document.getElementById("vlanRows"),
+        allocationMap: document.getElementById("allocationMap"),
+        legend: document.getElementById("legend"),
+        messages: document.getElementById("messages"),
+        chipUsed: document.getElementById("chipUsed"),
+        chipFree: document.getElementById("chipFree"),
+        chipConflicts: document.getElementById("chipConflicts"),
+        proKeyInput: document.getElementById("proKeyInput"),
+        saveProKeyBtn: document.getElementById("saveProKeyBtn"),
+        toggleWatermarkBtn: document.getElementById("toggleWatermarkBtn")
+      };
+
+      el.baseCidr.addEventListener("input", function () {
+        state.baseCidr = el.baseCidr.value.trim();
+      });
+
+      el.siteName.addEventListener("input", updateTitle);
+
+      el.addVlanBtn.addEventListener("click", function () {
+        state.vlans.push(row(nextVlanId(), "", "", 30));
+        renderTable();
+      });
+
+      el.allocateBtn.addEventListener("click", allocate);
+
+      el.printBtn.addEventListener("click", function () {
+        window.print();
+      });
+
+      el.saveProKeyBtn.addEventListener("click", function () {
+        localStorage.setItem("fieldkit_pro_key", el.proKeyInput.value.trim());
+        syncProState();
+      });
+
+      el.toggleWatermarkBtn.addEventListener("click", function () {
+        if (!isProUnlocked()) return;
+        state.watermarkHidden = !state.watermarkHidden;
+        el.appRoot.classList.toggle("hide-watermark", state.watermarkHidden);
+        el.toggleWatermarkBtn.textContent = state.watermarkHidden ? "Show Watermark (Pro)" : "Hide Watermark (Pro)";
+      });
+
+      function row(vlanId, name, purpose, hostNeed) {
+        return {
+          id: uid(),
+          vlanId: vlanId,
+          name: name,
+          purpose: purpose,
+          hostNeed: hostNeed,
+          cidr: ""
+        };
+      }
+
+      function renderTable() {
+        el.vlanRows.innerHTML = "";
+
+        state.vlans.forEach(function (vlan) {
+          const tr = document.createElement("tr");
+          tr.innerHTML = ""
+            + "<td><input type=\"number\" min=\"1\" max=\"4094\" value=\"" + esc(vlan.vlanId) + "\" data-id=\"" + vlan.id + "\" data-field=\"vlanId\"></td>"
+            + "<td><input type=\"text\" value=\"" + esc(vlan.name) + "\" data-id=\"" + vlan.id + "\" data-field=\"name\"></td>"
+            + "<td><input type=\"text\" value=\"" + esc(vlan.purpose) + "\" data-id=\"" + vlan.id + "\" data-field=\"purpose\"></td>"
+            + "<td><input type=\"number\" min=\"1\" max=\"65534\" value=\"" + esc(vlan.hostNeed) + "\" data-id=\"" + vlan.id + "\" data-field=\"hostNeed\"></td>"
+            + "<td><input type=\"text\" value=\"" + esc(vlan.cidr) + "\" readonly></td>"
+            + "<td><button type=\"button\" class=\"btn-danger\" data-delete=\"" + vlan.id + "\">Del</button></td>";
+          el.vlanRows.appendChild(tr);
+        });
+
+        el.vlanRows.querySelectorAll("input[data-field]").forEach(function (input) {
+          input.addEventListener("input", function () {
+            const id = input.getAttribute("data-id");
+            const field = input.getAttribute("data-field");
+            const target = state.vlans.find(function (v) { return v.id === id; });
+            if (!target) return;
+
+            if (field === "vlanId" || field === "hostNeed") {
+              target[field] = Number(input.value);
+              return;
+            }
+
+            target[field] = input.value;
+          });
+        });
+
+        el.vlanRows.querySelectorAll("button[data-delete]").forEach(function (button) {
+          button.addEventListener("click", function () {
+            const id = button.getAttribute("data-delete");
+            state.vlans = state.vlans.filter(function (v) { return v.id !== id; });
+            renderTable();
+            allocate();
+          });
+        });
+      }
+
+      function allocate() {
+        state.conflicts = [];
+        state.allocation = [];
+        state.vlans.forEach(function (v) { v.cidr = ""; });
+
+        let base;
+        try {
+          base = parseCidr(state.baseCidr);
+        } catch (error) {
+          setStatus(["Invalid parent CIDR: " + error.message], "danger");
+          paintEmpty();
+          renderCapacity(0, 0, 0);
+          return;
+        }
+
+        if (!state.vlans.length) {
+          setStatus(["No VLAN rows available. Add at least one VLAN request."], "warn");
+          paintEmpty();
+          renderCapacity(base.broadcastInt - base.networkInt + 1, 0, 0);
+          return;
+        }
+
+        const validationNotes = validateVlanRows();
+        const sorted = state.vlans
+          .map(function (vlan) {
+            return { vlan: vlan, subnetSize: subnetSizeForHosts(vlan.hostNeed) };
+          })
+          .sort(function (a, b) { return b.subnetSize - a.subnetSize; });
+
+        let cursor = base.networkInt;
+
+        sorted.forEach(function (entry) {
+          if (!Number.isFinite(entry.subnetSize) || entry.subnetSize <= 0) return;
+
+          const start = alignTo(cursor, entry.subnetSize);
+          const end = start + entry.subnetSize - 1;
+
+          if (end > base.broadcastInt) {
+            state.conflicts.push("VLAN " + entry.vlan.vlanId + " (" + safeName(entry.vlan.name) + ") does not fit inside the parent CIDR.");
+            return;
+          }
+
+          const prefix = prefixFromSize(entry.subnetSize);
+          entry.vlan.cidr = intToIp(start) + "/" + prefix;
+          state.allocation.push({
+            id: entry.vlan.id,
+            vlanId: entry.vlan.vlanId,
+            name: entry.vlan.name,
+            purpose: entry.vlan.purpose,
+            cidr: entry.vlan.cidr,
+            start: start,
+            end: end,
+            size: entry.subnetSize,
+            color: colorForVlan(entry.vlan.vlanId)
+          });
+
+          cursor = end + 1;
+        });
+
+        detectOverlaps(base);
+        renderTable();
+        renderMap(base);
+
+        const totalIps = Math.max(base.broadcastInt - base.networkInt + 1, 0);
+        const usedIps = state.allocation.reduce(function (sum, item) { return sum + item.size; }, 0);
+        renderCapacity(totalIps, usedIps, state.conflicts.length);
+
+        if (!validationNotes.length && !state.conflicts.length) {
+          setStatus(["Allocation completed for " + state.allocation.length + " VLANs."], "ok");
+          return;
+        }
+
+        const merged = validationNotes.concat(state.conflicts);
+        setStatus(merged.length ? merged : ["Issues detected in request rows."], "danger");
+      }
+
+      function validateVlanRows() {
+        const notes = [];
+        const seen = Object.create(null);
+
+        state.vlans.forEach(function (vlan, index) {
+          const rowLabel = "Row " + (index + 1) + ": ";
+
+          if (!Number.isInteger(vlan.vlanId) || vlan.vlanId < 1 || vlan.vlanId > 4094) {
+            notes.push(rowLabel + "VLAN ID must be between 1 and 4094.");
+          } else if (seen[vlan.vlanId]) {
+            notes.push(rowLabel + "Duplicate VLAN ID " + vlan.vlanId + ".");
+          } else {
+            seen[vlan.vlanId] = true;
+          }
+
+          if (!String(vlan.name || "").trim()) {
+            notes.push(rowLabel + "VLAN name is required.");
+          }
+
+          if (!Number.isFinite(vlan.hostNeed) || vlan.hostNeed < 1) {
+            notes.push(rowLabel + "Host count must be at least 1.");
+          }
+        });
+
+        return notes;
+      }
+
+      function detectOverlaps(base) {
+        const sorted = state.allocation.slice().sort(function (a, b) { return a.start - b.start; });
+
+        sorted.forEach(function (current, i) {
+          if (current.start < base.networkInt || current.end > base.broadcastInt) {
+            state.conflicts.push("Allocated subnet " + current.cidr + " is outside the parent range.");
+          }
+
+          for (let j = i + 1; j < sorted.length; j += 1) {
+            const next = sorted[j];
+            if (current.start <= next.end && next.start <= current.end) {
+              state.conflicts.push("Overlap detected between " + current.cidr + " and " + next.cidr + ".");
+            }
+          }
+        });
+      }
+
+      function renderCapacity(total, used, conflicts) {
+        const free = Math.max(total - used, 0);
+        el.chipUsed.textContent = "Used: " + used.toLocaleString() + " IPs";
+        el.chipFree.textContent = "Free: " + free.toLocaleString() + " IPs";
+        el.chipConflicts.textContent = "Conflicts: " + conflicts;
+      }
+
+      function renderMap(base) {
+        el.allocationMap.innerHTML = "";
+        el.legend.innerHTML = "";
+
+        const total = Math.max(base.broadcastInt - base.networkInt + 1, 1);
+        const chunks = [];
+        const sorted = state.allocation.slice().sort(function (a, b) { return a.start - b.start; });
+        let cursor = base.networkInt;
+
+        sorted.forEach(function (subnet) {
+          if (cursor < subnet.start) {
+            chunks.push({ type: "free", start: cursor, end: subnet.start - 1 });
+          }
+
+          chunks.push({ type: "used", subnet: subnet, start: subnet.start, end: subnet.end });
+          cursor = subnet.end + 1;
+        });
+
+        if (cursor <= base.broadcastInt) {
+          chunks.push({ type: "free", start: cursor, end: base.broadcastInt });
+        }
+
+        if (!chunks.length) {
+          paintEmpty();
+          return;
+        }
+
+        chunks.forEach(function (chunk) {
+          const span = chunk.end - chunk.start + 1;
+          const width = (span / total) * 100;
+          const piece = document.createElement("div");
+
+          piece.className = chunk.type === "free" ? "segment free" : "segment";
+          piece.style.width = width + "%";
+
+          if (chunk.type === "used") {
+            piece.style.background = chunk.subnet.color;
+            const label = "VLAN " + chunk.subnet.vlanId;
+            piece.textContent = width >= 9 ? label : "";
+            piece.title = label + " — " + chunk.subnet.cidr + " — " + safeName(chunk.subnet.name);
+            addLegend(chunk.subnet.color, label + " · " + safeName(chunk.subnet.name) + " · " + chunk.subnet.cidr);
+          } else {
+            piece.title = "Free range";
+            piece.textContent = width >= 11 ? "Free" : "";
+          }
+
+          el.allocationMap.appendChild(piece);
+        });
+
+        if (state.conflicts.length) {
+          addLegend("#b7374e", "Conflict present");
+        }
+      }
+
+      function addLegend(color, text) {
+        const item = document.createElement("span");
+        item.className = "legend-item";
+        item.innerHTML = "<i class=\"swatch\" style=\"background:" + color + "\"></i>" + esc(text);
+        el.legend.appendChild(item);
+      }
+
+      function setStatus(lines, tone) {
+        el.messages.innerHTML = "";
+        el.messages.className = "status-list " + tone;
+
+        lines.forEach(function (line) {
+          const li = document.createElement("li");
+          li.textContent = line;
+          el.messages.appendChild(li);
+        });
+      }
+
+      function paintEmpty() {
+        el.allocationMap.innerHTML = "<div class=\"segment free\" style=\"width:100%\">No allocation to display</div>";
+        el.legend.innerHTML = "";
+      }
+
+      function parseCidr(cidr) {
+        const parts = String(cidr || "").trim().split("/");
+        if (parts.length !== 2) throw new Error("Format must be x.x.x.x/prefix");
+
+        const ip = ipToInt(parts[0]);
+        const prefix = Number(parts[1]);
+        if (!Number.isInteger(prefix) || prefix < 0 || prefix > 32) throw new Error("Prefix must be 0-32");
+
+        const size = Math.pow(2, 32 - prefix);
+        const mask = prefix === 0 ? 0 : (0xffffffff << (32 - prefix)) >>> 0;
+        const network = (ip & mask) >>> 0;
+        return {
+          networkInt: network,
+          broadcastInt: (network + size - 1) >>> 0,
+          prefix: prefix
+        };
+      }
+
+      function ipToInt(ip) {
+        const octets = String(ip).trim().split(".");
+        if (octets.length !== 4) throw new Error("IPv4 address must have 4 octets");
+
+        let value = 0;
+        for (let i = 0; i < octets.length; i += 1) {
+          const octet = Number(octets[i]);
+          if (!Number.isInteger(octet) || octet < 0 || octet > 255) {
+            throw new Error("IPv4 octets must be between 0 and 255");
+          }
+          value = (value << 8) + octet;
+        }
+
+        return value >>> 0;
+      }
+
+      function intToIp(value) {
+        return [
+          (value >>> 24) & 255,
+          (value >>> 16) & 255,
+          (value >>> 8) & 255,
+          value & 255
+        ].join(".");
+      }
+
+      function subnetSizeForHosts(hostCount) {
+        let needed = Number(hostCount) + 2;
+        if (!Number.isFinite(needed) || needed < 4) needed = 4;
+
+        let size = 1;
+        while (size < needed) size *= 2;
+        return size;
+      }
+
+      function prefixFromSize(size) {
+        return 32 - Math.log2(size);
+      }
+
+      function alignTo(value, blockSize) {
+        return Math.ceil(value / blockSize) * blockSize;
+      }
+
+      function colorForVlan(vlanId) {
+        const hue = (Number(vlanId) * 53) % 360;
+        return "hsl(" + hue + " 80% 64%)";
+      }
+
+      function safeName(name) {
+        return String(name || "").trim() || "Unnamed";
+      }
+
+      function uid() {
+        return "v-" + Math.random().toString(36).slice(2, 10);
+      }
+
+      function nextVlanId() {
+        const existing = state.vlans.map(function (row) { return Number(row.vlanId) || 0; });
+        let candidate = 10;
+        while (existing.indexOf(candidate) !== -1) candidate += 10;
+        return candidate;
+      }
+
+      function esc(raw) {
+        return String(raw)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/\"/g, "&quot;");
+      }
+
+      function isProUnlocked() {
+        return localStorage.getItem("fieldkit_pro_key") === "VALID_KEY";
+      }
+
+      function syncProState() {
+        const unlocked = isProUnlocked();
+        el.toggleWatermarkBtn.disabled = !unlocked;
+
+        if (!unlocked && state.watermarkHidden) {
+          state.watermarkHidden = false;
+          el.appRoot.classList.remove("hide-watermark");
+          el.toggleWatermarkBtn.textContent = "Hide Watermark (Pro)";
+        }
+      }
+
+      function updateTitle() {
+        const suffix = el.siteName.value.trim();
+        document.title = "Field-Kit | IP / VLAN Planner" + (suffix ? " | " + suffix : "");
+      }
+
+      renderTable();
+      syncProState();
+      allocate();
+      updateTitle();
+    })();
+  </script>
+</body>
+</html>

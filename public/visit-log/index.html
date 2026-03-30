@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Technician Visit Log - Field-Kit</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<style>
+  :root {
+    --ink: #0f1726;
+    --panel: #121d31;
+    --panel-alt: #1a2941;
+    --line: #2a3f61;
+    --text: #e9f0fb;
+    --muted: #89a2c1;
+    --accent: #00d0b8;
+    --paper: #ffffff;
+    --paper-line: #d9e3ee;
+    --paper-text: #132238;
+    --warn: #ff7b7b;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: "Segoe UI", "Inter", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+    background: radial-gradient(circle at 20% -10%, #27456e 0, var(--ink) 38%, #0a111d 100%);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: rgba(8, 14, 24, 0.94);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+    padding: 0.85rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.8rem;
+  }
+
+  .brand {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    font-weight: 600;
+    font-size: 0.9rem;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  .brand span { color: var(--accent); }
+
+  .title {
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.62rem;
+    border-left: 1px solid var(--line);
+    padding-left: 0.7rem;
+    margin-left: 0.7rem;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+  }
+
+  .actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .btn {
+    border: 1px solid var(--line);
+    background: var(--panel-alt);
+    color: var(--text);
+    border-radius: 6px;
+    padding: 0.45rem 0.75rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    font-size: 0.64rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+  }
+
+  .btn:hover { border-color: var(--accent); }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #063731;
+    border-color: transparent;
+    font-weight: 700;
+  }
+
+  .btn-danger:hover {
+    border-color: var(--warn);
+    color: var(--warn);
+  }
+
+  .layout {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 390px 1fr;
+    min-height: 0;
+  }
+
+  .panel {
+    background: var(--panel);
+    border-right: 1px solid var(--line);
+    overflow-y: auto;
+    padding: 1rem;
+  }
+
+  .panel::-webkit-scrollbar { width: 6px; }
+  .panel::-webkit-scrollbar-thumb { background: #223655; border-radius: 999px; }
+
+  .section { margin-bottom: 1rem; }
+
+  .section h2 {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 0.35rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .field { margin-bottom: 0.5rem; }
+
+  label {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+
+  input,
+  textarea {
+    width: 100%;
+    border: 1px solid var(--line);
+    background: #0f1a2d;
+    color: var(--text);
+    border-radius: 6px;
+    padding: 0.48rem 0.56rem;
+    font-size: 0.82rem;
+    font-family: "Segoe UI", "Inter", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+    outline: none;
+  }
+
+  input:focus,
+  textarea:focus { border-color: var(--accent); }
+
+  textarea {
+    resize: vertical;
+    min-height: 68px;
+    line-height: 1.45;
+  }
+
+  .row-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+
+  .parts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+
+  .part-row {
+    display: grid;
+    grid-template-columns: 1fr 88px 32px;
+    gap: 0.4rem;
+    align-items: center;
+  }
+
+  .part-row input { margin: 0; }
+
+  .btn-remove {
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--muted);
+    border-radius: 6px;
+    height: 32px;
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+  }
+
+  .btn-remove:hover {
+    border-color: var(--warn);
+    color: var(--warn);
+  }
+
+  .preview-wrap {
+    padding: 1rem;
+    overflow: auto;
+    background: linear-gradient(180deg, #dbe6f2, #c8d8e8);
+  }
+
+  .sheet {
+    max-width: 860px;
+    margin: 0 auto;
+    background: var(--paper);
+    border: 1px solid var(--paper-line);
+    box-shadow: 0 18px 35px rgba(0, 0, 0, 0.18);
+    color: var(--paper-text);
+    padding: 1.6rem;
+  }
+
+  .sheet-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.2rem;
+    gap: 1rem;
+  }
+
+  .sheet-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+
+  .sheet-sub {
+    color: #49627f;
+    margin-top: 0.2rem;
+    font-size: 0.88rem;
+  }
+
+  .logo-box {
+    width: 150px;
+    min-height: 48px;
+    border: 1px dashed #aec1d6;
+    border-radius: 6px;
+    padding: 0.35rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    color: #7288a2;
+    text-align: center;
+  }
+
+  .logo-box img {
+    max-width: 100%;
+    max-height: 58px;
+    object-fit: contain;
+  }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.8rem;
+    margin-bottom: 0.8rem;
+  }
+
+  .card {
+    border: 1px solid var(--paper-line);
+    border-radius: 8px;
+    padding: 0.7rem;
+    background: #fbfdff;
+  }
+
+  .card h3 {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #2d4d73;
+    margin-bottom: 0.45rem;
+  }
+
+  .line-item {
+    display: grid;
+    grid-template-columns: 132px 1fr;
+    gap: 0.55rem;
+    margin-bottom: 0.35rem;
+    font-size: 0.86rem;
+  }
+
+  .line-item strong { color: #355678; }
+
+  .work-log,
+  .parts-log {
+    border: 1px solid var(--paper-line);
+    border-radius: 8px;
+    padding: 0.7rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .work-log h3,
+  .parts-log h3 {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #2d4d73;
+    margin-bottom: 0.45rem;
+  }
+
+  .work-copy {
+    font-size: 0.9rem;
+    white-space: pre-wrap;
+    min-height: 60px;
+    line-height: 1.45;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+
+  th,
+  td {
+    border-bottom: 1px solid #e4ecf5;
+    padding: 0.4rem;
+    text-align: left;
+  }
+
+  th {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #517093;
+  }
+
+  .muted-copy {
+    color: #6f87a2;
+    font-size: 0.82rem;
+  }
+
+  .watermark {
+    display: none;
+    text-align: center;
+    font-size: 0.75rem;
+    color: #999;
+    margin-top: 1rem;
+  }
+
+  .pro-note {
+    margin-top: 0.4rem;
+    font-size: 0.68rem;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
+  .unlock-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.4rem;
+    margin-top: 0.4rem;
+  }
+
+  .status-badge {
+    margin-top: 0.35rem;
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #8fd8cc;
+  }
+
+  .status-badge.off { color: #7f95b1; }
+
+  @media (max-width: 1040px) {
+    .layout { grid-template-columns: 1fr; }
+    .panel { border-right: 0; border-bottom: 1px solid var(--line); }
+  }
+
+  @media (max-width: 760px) {
+    .header { flex-direction: column; align-items: flex-start; }
+    .actions { width: 100%; flex-wrap: wrap; }
+    .sheet { padding: 1rem; }
+    .grid-2 { grid-template-columns: 1fr; }
+    .line-item { grid-template-columns: 118px 1fr; }
+  }
+
+  @media print {
+    body {
+      background: white;
+      color: black;
+    }
+
+    .no-print,
+    .header,
+    .panel {
+      display: none !important;
+    }
+
+    .layout,
+    .preview-wrap {
+      display: block;
+      padding: 0;
+      margin: 0;
+      background: white;
+    }
+
+    .sheet {
+      max-width: none;
+      box-shadow: none;
+      border: 0;
+      padding: 0.25in;
+    }
+
+    .watermark { display: block; }
+    .watermark.hidden-by-pro { display: none; }
+  }
+</style>
+</head>
+<body>
+<header class="header no-print">
+  <div class="header-left">
+    <a class="brand" href="/">Field-<span>Kit</span></a>
+    <div class="title">Technician Visit Log</div>
+  </div>
+  <div class="actions">
+    <button class="btn" id="btn-add-part" type="button">Add Part</button>
+    <button class="btn" id="btn-export-csv" type="button">Export CSV</button>
+    <button class="btn btn-primary" id="btn-print" type="button">Export PDF</button>
+  </div>
+</header>
+
+<main class="layout">
+  <aside class="panel no-print">
+    <section class="section">
+      <h2>Visit Details</h2>
+      <div class="field">
+        <label for="jobDate">Visit Date</label>
+        <input id="jobDate" name="jobDate" type="date">
+      </div>
+      <div class="field row-2">
+        <div>
+          <label for="arrivalTime">Arrival Time</label>
+          <input id="arrivalTime" name="arrivalTime" type="time">
+        </div>
+        <div>
+          <label for="departureTime">Departure Time</label>
+          <input id="departureTime" name="departureTime" type="time">
+        </div>
+      </div>
+      <div class="field row-2">
+        <div>
+          <label for="travelTime">Travel Time (hh:mm)</label>
+          <input id="travelTime" name="travelTime" type="text" placeholder="01:10">
+        </div>
+        <div>
+          <label for="mileage">Mileage (mi)</label>
+          <input id="mileage" name="mileage" type="number" min="0" step="0.1" placeholder="14.5">
+        </div>
+      </div>
+      <div class="field">
+        <label for="technicianName">Technician Name</label>
+        <input id="technicianName" name="technicianName" type="text" placeholder="Alex Morgan">
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Client Details</h2>
+      <div class="field">
+        <label for="clientName">Client Name</label>
+        <input id="clientName" name="clientName" type="text" placeholder="Acme Dental Group">
+      </div>
+      <div class="field row-2">
+        <div>
+          <label for="contactName">Contact Name</label>
+          <input id="contactName" name="contactName" type="text" placeholder="Sam Lee">
+        </div>
+        <div>
+          <label for="contactPhone">Contact Phone</label>
+          <input id="contactPhone" name="contactPhone" type="text" placeholder="+44 20 1234 5678">
+        </div>
+      </div>
+      <div class="field">
+        <label for="siteAddress">Site Address</label>
+        <textarea id="siteAddress" name="siteAddress" placeholder="12 Market Street\nBristol\nBS1 4DJ"></textarea>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Work Carried Out</h2>
+      <div class="field">
+        <label for="workDone">Work Notes</label>
+        <textarea id="workDone" name="workDone" placeholder="Document troubleshooting and fixes completed."></textarea>
+      </div>
+      <div class="field">
+        <label for="followUp">Follow-up Required</label>
+        <textarea id="followUp" name="followUp" placeholder="Any pending tasks or recommendations."></textarea>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Parts Used</h2>
+      <div id="partsList" class="parts-list"></div>
+      <button class="btn" id="btn-add-part-inline" type="button">Add Parts Line</button>
+    </section>
+
+    <section class="section">
+      <h2>Branding (Pro)</h2>
+      <div class="field">
+        <label for="logoUpload">Upload Company Logo (Pro)</label>
+        <input id="logoUpload" name="logoUpload" type="file" accept="image/*">
+      </div>
+      <div class="field">
+        <label><input id="toggleWatermark" type="checkbox"> Remove watermark on print (Pro)</label>
+      </div>
+      <div class="unlock-row">
+        <input id="proKey" type="text" placeholder="Enter Gumroad licence key">
+        <button class="btn" id="btn-unlock" type="button">Unlock Pro</button>
+      </div>
+      <div id="proStatus" class="status-badge off">Pro Locked</div>
+      <p class="pro-note">Pro features are unlocked by a valid key stored in localStorage. Payment validation is handled externally.</p>
+    </section>
+  </aside>
+
+  <section class="preview-wrap">
+    <article class="sheet" id="printSheet">
+      <div class="sheet-head">
+        <div>
+          <h1 class="sheet-title">Technician Visit Log</h1>
+          <p class="sheet-sub">Field service record for on-site technician activity.</p>
+        </div>
+        <div class="logo-box" id="logoBox">Logo upload available with Pro</div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>Client Details</h3>
+          <div class="line-item"><strong>Client</strong><span id="outClientName">-</span></div>
+          <div class="line-item"><strong>Contact</strong><span id="outContactName">-</span></div>
+          <div class="line-item"><strong>Phone</strong><span id="outContactPhone">-</span></div>
+          <div class="line-item"><strong>Site Address</strong><span id="outSiteAddress">-</span></div>
+        </div>
+        <div class="card">
+          <h3>Visit Details</h3>
+          <div class="line-item"><strong>Date</strong><span id="outJobDate">-</span></div>
+          <div class="line-item"><strong>Technician</strong><span id="outTechnicianName">-</span></div>
+          <div class="line-item"><strong>Arrival</strong><span id="outArrival">-</span></div>
+          <div class="line-item"><strong>Departure</strong><span id="outDeparture">-</span></div>
+          <div class="line-item"><strong>On-Site Duration</strong><span id="outDuration">-</span></div>
+          <div class="line-item"><strong>Travel Time</strong><span id="outTravelTime">-</span></div>
+          <div class="line-item"><strong>Mileage</strong><span id="outMileage">-</span></div>
+        </div>
+      </div>
+
+      <section class="work-log">
+        <h3>Work Carried Out</h3>
+        <div class="work-copy" id="outWorkDone">No work notes entered.</div>
+      </section>
+
+      <section class="work-log">
+        <h3>Follow-up Required</h3>
+        <div class="work-copy" id="outFollowUp">No follow-up recorded.</div>
+      </section>
+
+      <section class="parts-log">
+        <h3>Parts Used</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Part / Description</th>
+              <th>Qty</th>
+            </tr>
+          </thead>
+          <tbody id="outPartsBody"></tbody>
+        </table>
+        <p class="muted-copy" id="outPartsFallback">No parts used.</p>
+      </section>
+
+      <div id="watermark" class="watermark">Generated by Field-Kit - field-kit.co.uk</div>
+    </article>
+  </section>
+</main>
+
+<script>
+  function isProUnlocked() {
+    return localStorage.getItem('fieldkit_pro_key') === 'VALID_KEY';
+  }
+
+  const formIds = [
+    'jobDate', 'arrivalTime', 'departureTime', 'travelTime', 'mileage',
+    'technicianName', 'clientName', 'contactName', 'contactPhone',
+    'siteAddress', 'workDone', 'followUp'
+  ];
+
+  const partsList = document.getElementById('partsList');
+  const outPartsBody = document.getElementById('outPartsBody');
+  const outPartsFallback = document.getElementById('outPartsFallback');
+  const logoUpload = document.getElementById('logoUpload');
+  const logoBox = document.getElementById('logoBox');
+  const toggleWatermark = document.getElementById('toggleWatermark');
+  const proStatus = document.getElementById('proStatus');
+  const watermark = document.getElementById('watermark');
+
+  const state = { logoDataUrl: '' };
+
+  function safe(value, fallback = '-') {
+    return value && String(value).trim() ? String(value).trim() : fallback;
+  }
+
+  function formatDate(value) {
+    if (!value) return '-';
+    const d = new Date(value + 'T00:00:00');
+    if (Number.isNaN(d.getTime())) return value;
+    return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+  }
+
+  function calculateDuration(start, end) {
+    if (!start || !end) return '-';
+    const [sH, sM] = start.split(':').map(Number);
+    const [eH, eM] = end.split(':').map(Number);
+    if ([sH, sM, eH, eM].some(Number.isNaN)) return '-';
+    const startMinutes = sH * 60 + sM;
+    const endMinutes = eH * 60 + eM;
+    const diff = endMinutes - startMinutes;
+    if (diff < 0) return '-';
+    const hours = Math.floor(diff / 60);
+    const minutes = diff % 60;
+    return hours + 'h ' + String(minutes).padStart(2, '0') + 'm';
+  }
+
+  function getParts() {
+    const rows = Array.from(partsList.querySelectorAll('.part-row'));
+    return rows.map((row) => {
+      const name = row.querySelector('.part-name').value.trim();
+      const qty = row.querySelector('.part-qty').value.trim();
+      return { name, qty };
+    }).filter((part) => part.name || part.qty);
+  }
+
+  function renderPartsOutput(parts) {
+    outPartsBody.innerHTML = '';
+    if (!parts.length) {
+      outPartsFallback.style.display = 'block';
+      return;
+    }
+    outPartsFallback.style.display = 'none';
+    parts.forEach((part) => {
+      const tr = document.createElement('tr');
+      const tdName = document.createElement('td');
+      const tdQty = document.createElement('td');
+      tdName.textContent = part.name || '-';
+      tdQty.textContent = part.qty || '-';
+      tr.appendChild(tdName);
+      tr.appendChild(tdQty);
+      outPartsBody.appendChild(tr);
+    });
+  }
+
+  function updateOutput() {
+    const values = Object.fromEntries(formIds.map((id) => [id, document.getElementById(id).value]));
+
+    document.getElementById('outClientName').textContent = safe(values.clientName);
+    document.getElementById('outContactName').textContent = safe(values.contactName);
+    document.getElementById('outContactPhone').textContent = safe(values.contactPhone);
+    document.getElementById('outSiteAddress').textContent = safe(values.siteAddress);
+
+    document.getElementById('outJobDate').textContent = formatDate(values.jobDate);
+    document.getElementById('outTechnicianName').textContent = safe(values.technicianName);
+    document.getElementById('outArrival').textContent = safe(values.arrivalTime);
+    document.getElementById('outDeparture').textContent = safe(values.departureTime);
+    document.getElementById('outDuration').textContent = calculateDuration(values.arrivalTime, values.departureTime);
+    document.getElementById('outTravelTime').textContent = safe(values.travelTime);
+    document.getElementById('outMileage').textContent = values.mileage ? values.mileage + ' mi' : '-';
+
+    document.getElementById('outWorkDone').textContent = safe(values.workDone, 'No work notes entered.');
+    document.getElementById('outFollowUp').textContent = safe(values.followUp, 'No follow-up recorded.');
+
+    renderPartsOutput(getParts());
+  }
+
+  function addPartRow(name = '', qty = '') {
+    const row = document.createElement('div');
+    row.className = 'part-row';
+    row.innerHTML = '<input class="part-name" type="text" placeholder="Part / description" value="' + name.replace(/"/g, '&quot;') + '">' +
+      '<input class="part-qty" type="text" placeholder="Qty" value="' + qty.replace(/"/g, '&quot;') + '">' +
+      '<button class="btn-remove" type="button" aria-label="Remove part">&times;</button>';
+
+    row.querySelector('.part-name').addEventListener('input', updateOutput);
+    row.querySelector('.part-qty').addEventListener('input', updateOutput);
+    row.querySelector('.btn-remove').addEventListener('click', () => {
+      row.remove();
+      if (!partsList.children.length) addPartRow();
+      updateOutput();
+    });
+
+    partsList.appendChild(row);
+  }
+
+  function applyProUI() {
+    const unlocked = isProUnlocked();
+    logoUpload.disabled = !unlocked;
+    toggleWatermark.disabled = !unlocked;
+    proStatus.textContent = unlocked ? 'Pro Unlocked' : 'Pro Locked';
+    proStatus.className = unlocked ? 'status-badge' : 'status-badge off';
+
+    if (!unlocked) {
+      toggleWatermark.checked = false;
+      watermark.classList.remove('hidden-by-pro');
+      if (!state.logoDataUrl) {
+        logoBox.innerHTML = 'Logo upload available with Pro';
+      }
+    }
+  }
+
+  function maybeHideWatermark() {
+    if (isProUnlocked() && toggleWatermark.checked) {
+      watermark.classList.add('hidden-by-pro');
+      return;
+    }
+    watermark.classList.remove('hidden-by-pro');
+  }
+
+  function exportCsv() {
+    const values = Object.fromEntries(formIds.map((id) => [id, document.getElementById(id).value]));
+    const parts = getParts();
+
+    const rows = [
+      ['Visit Date', values.jobDate],
+      ['Arrival Time', values.arrivalTime],
+      ['Departure Time', values.departureTime],
+      ['On-Site Duration', calculateDuration(values.arrivalTime, values.departureTime)],
+      ['Travel Time', values.travelTime],
+      ['Mileage (mi)', values.mileage],
+      ['Technician', values.technicianName],
+      ['Client Name', values.clientName],
+      ['Contact Name', values.contactName],
+      ['Contact Phone', values.contactPhone],
+      ['Site Address', values.siteAddress],
+      ['Work Carried Out', values.workDone],
+      ['Follow-up Required', values.followUp],
+      ['', ''],
+      ['Parts Used', 'Quantity']
+    ];
+
+    if (!parts.length) {
+      rows.push(['None', '']);
+    } else {
+      parts.forEach((part) => rows.push([part.name, part.qty]));
+    }
+
+    const csv = rows.map((cols) => cols.map((cell) => {
+      const text = cell == null ? '' : String(cell);
+      return '"' + text.replace(/"/g, '""').replace(/\n/g, ' ') + '"';
+    }).join(',')).join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const datePart = values.jobDate ? values.jobDate : new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = 'technician-visit-log-' + datePart + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  document.getElementById('btn-add-part').addEventListener('click', () => addPartRow());
+  document.getElementById('btn-add-part-inline').addEventListener('click', () => addPartRow());
+  document.getElementById('btn-export-csv').addEventListener('click', exportCsv);
+  document.getElementById('btn-print').addEventListener('click', () => {
+    maybeHideWatermark();
+    window.print();
+  });
+
+  formIds.forEach((id) => {
+    document.getElementById(id).addEventListener('input', updateOutput);
+  });
+
+  document.getElementById('btn-unlock').addEventListener('click', () => {
+    const key = document.getElementById('proKey').value.trim();
+    if (!key) return;
+    localStorage.setItem('fieldkit_pro_key', key);
+    applyProUI();
+    maybeHideWatermark();
+  });
+
+  logoUpload.addEventListener('change', (event) => {
+    if (!isProUnlocked()) {
+      event.target.value = '';
+      alert('Logo upload is a Pro feature.');
+      return;
+    }
+
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      state.logoDataUrl = reader.result;
+      logoBox.innerHTML = '<img src="' + state.logoDataUrl + '" alt="Uploaded company logo">';
+    };
+    reader.readAsDataURL(file);
+  });
+
+  toggleWatermark.addEventListener('change', () => {
+    if (!isProUnlocked()) {
+      toggleWatermark.checked = false;
+      alert('Watermark removal is a Pro feature.');
+      return;
+    }
+    maybeHideWatermark();
+  });
+
+  addPartRow();
+  applyProUI();
+  updateOutput();
+</script>
+</body>
+</html>

@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Change Request Generator - Field-Kit</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0b1220;
+    --navy-mid: #111c2e;
+    --navy-light: #1a2840;
+    --navy-border: #1f3352;
+    --accent: #00c8ff;
+    --white: #f0f5fc;
+    --slate: #8aa4c4;
+    --muted: #4a6484;
+    --paper: #ffffff;
+    --paper-border: #d7e0ea;
+    --paper-text: #12223a;
+    --paper-muted: #4d6280;
+    --paper-accent: #1f5fa8;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Geist', sans-serif;
+    background: var(--navy);
+    color: var(--white);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .app-header {
+    background: var(--navy-mid);
+    border-bottom: 1px solid var(--navy-border);
+    padding: 0 1.2rem;
+    height: 58px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+  }
+
+  .logo {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--white);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+
+  .logo span { color: var(--accent); }
+
+  .tool-title {
+    font-size: 0.72rem;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border-left: 1px solid var(--navy-border);
+    padding-left: 0.85rem;
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+  }
+
+  .btn {
+    border: 1px solid var(--navy-border);
+    background: var(--navy-light);
+    color: var(--slate);
+    border-radius: 4px;
+    padding: 0.45rem 0.75rem;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.64rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+    transition: all 0.15s;
+  }
+
+  .btn:hover {
+    border-color: var(--accent);
+    color: var(--white);
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #03263a;
+    border-color: transparent;
+  }
+
+  .btn-primary:hover {
+    background: #32d8ff;
+    color: #022335;
+  }
+
+  .workspace {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 420px 1fr;
+    min-height: 0;
+  }
+
+  .form-panel {
+    border-right: 1px solid var(--navy-border);
+    overflow-y: auto;
+    padding: 1.3rem;
+    background: var(--navy-mid);
+  }
+
+  .form-panel::-webkit-scrollbar { width: 5px; }
+  .form-panel::-webkit-scrollbar-thumb { background: var(--navy-border); border-radius: 3px; }
+
+  .section { margin-bottom: 1.1rem; }
+
+  .section-title {
+    font-family: 'JetBrains Mono', monospace;
+    text-transform: uppercase;
+    font-size: 0.6rem;
+    letter-spacing: 0.14em;
+    color: var(--accent);
+    margin-bottom: 0.6rem;
+    border-bottom: 1px solid var(--navy-border);
+    padding-bottom: 0.34rem;
+  }
+
+  .field { margin-bottom: 0.55rem; }
+
+  label {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-size: 0.66rem;
+    color: var(--slate);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+
+  input,
+  textarea,
+  select {
+    width: 100%;
+    border: 1px solid var(--navy-border);
+    background: var(--navy-light);
+    color: var(--white);
+    border-radius: 4px;
+    padding: 0.45rem 0.6rem;
+    font-size: 0.82rem;
+    font-family: 'Geist', sans-serif;
+    outline: none;
+  }
+
+  input:focus,
+  textarea:focus,
+  select:focus { border-color: var(--accent); }
+
+  textarea {
+    resize: vertical;
+    min-height: 68px;
+    line-height: 1.45;
+  }
+
+  .row-2 {
+    display: grid;
+    gap: 0.5rem;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .row-3 {
+    display: grid;
+    gap: 0.5rem;
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+
+  .hint {
+    font-size: 0.66rem;
+    color: var(--muted);
+    line-height: 1.35;
+  }
+
+  .preview-wrap {
+    background: linear-gradient(180deg, #d8e2ec 0%, #c3d2df 100%);
+    overflow-y: auto;
+    padding: 1.2rem;
+  }
+
+  .preview-wrap::-webkit-scrollbar { width: 6px; }
+  .preview-wrap::-webkit-scrollbar-thumb { background: #8da1b6; border-radius: 4px; }
+
+  .paper {
+    max-width: 860px;
+    margin: 0 auto;
+    background: var(--paper);
+    border: 1px solid var(--paper-border);
+    border-radius: 6px;
+    padding: 1.6rem;
+    color: var(--paper-text);
+    box-shadow: 0 14px 28px rgba(10, 24, 42, 0.2);
+  }
+
+  .paper-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    border-bottom: 2px solid #eef2f7;
+    padding-bottom: 0.8rem;
+    margin-bottom: 1rem;
+  }
+
+  .paper-brand {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--paper-accent);
+    margin-bottom: 0.3rem;
+  }
+
+  .paper-title {
+    font-size: 1.55rem;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.35rem;
+  }
+
+  .paper-sub {
+    font-size: 0.8rem;
+    color: var(--paper-muted);
+    line-height: 1.45;
+  }
+
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid #c4d7ef;
+    border-radius: 999px;
+    padding: 0.18rem 0.55rem;
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-family: 'JetBrains Mono', monospace;
+    color: #204a7a;
+    background: #e8f2ff;
+  }
+
+  .meta-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.55rem;
+    margin-bottom: 0.9rem;
+  }
+
+  .meta {
+    border: 1px solid #e3ebf5;
+    border-radius: 4px;
+    padding: 0.5rem;
+    min-height: 60px;
+    background: #fbfdff;
+  }
+
+  .meta-label {
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--paper-muted);
+    margin-bottom: 0.2rem;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .meta-value {
+    font-size: 0.86rem;
+    line-height: 1.45;
+    word-break: break-word;
+    white-space: pre-wrap;
+  }
+
+  .block {
+    border: 1px solid #e3ebf5;
+    border-radius: 4px;
+    padding: 0.72rem;
+    margin-bottom: 0.65rem;
+    background: #fbfdff;
+  }
+
+  .block-title {
+    font-family: 'JetBrains Mono', monospace;
+    text-transform: uppercase;
+    font-size: 0.63rem;
+    letter-spacing: 0.08em;
+    color: var(--paper-muted);
+    margin-bottom: 0.35rem;
+  }
+
+  .block-content {
+    font-size: 0.9rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .list-items {
+    list-style: none;
+    padding-left: 0;
+  }
+
+  .list-items li {
+    position: relative;
+    padding-left: 0.95rem;
+    margin-bottom: 0.25rem;
+    line-height: 1.45;
+  }
+
+  .list-items li::before {
+    content: "•";
+    position: absolute;
+    left: 0.25rem;
+    color: var(--paper-accent);
+    font-size: 0.92rem;
+    line-height: 1.45;
+  }
+
+  .numbered {
+    list-style: decimal;
+    padding-left: 1.25rem;
+  }
+
+  .numbered li {
+    padding-left: 0;
+  }
+
+  .numbered li::before { content: none; }
+
+  .watermark {
+    display: none;
+    text-align: center;
+    font-size: 0.75rem;
+    color: #8da0b8;
+    margin-top: 1.2rem;
+  }
+
+  @media (max-width: 1040px) {
+    .workspace { grid-template-columns: 1fr; }
+    .form-panel {
+      border-right: none;
+      border-bottom: 1px solid var(--navy-border);
+      max-height: 56vh;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .app-header {
+      height: auto;
+      padding: 0.85rem;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.65rem;
+    }
+
+    .header-actions { width: 100%; }
+
+    .header-actions .btn {
+      flex: 1;
+      text-align: center;
+    }
+
+    .row-2,
+    .row-3,
+    .meta-grid { grid-template-columns: 1fr; }
+
+    .paper { padding: 1rem; }
+
+    .paper-title { font-size: 1.2rem; }
+  }
+
+  @page { size: A4; margin: 12mm; }
+
+  @media print {
+    body {
+      background: #fff;
+      color: #000;
+      min-height: auto;
+      display: block;
+    }
+
+    .app-header,
+    .form-panel,
+    .no-print { display: none !important; }
+
+    .workspace { display: block; }
+
+    .preview-wrap {
+      background: #fff;
+      padding: 0;
+      overflow: visible;
+    }
+
+    .paper {
+      box-shadow: none;
+      border: none;
+      border-radius: 0;
+      padding: 0;
+      max-width: 100%;
+    }
+
+    .watermark { display: block; }
+  }
+</style>
+</head>
+<body>
+
+<header class="app-header no-print">
+  <div class="header-left">
+    <a href="/" class="logo">Field<span>-Kit</span></a>
+    <div class="tool-title">Change Request Generator</div>
+  </div>
+  <div class="header-actions">
+    <button class="btn" id="btnReset">Reset</button>
+    <button class="btn btn-primary" id="btnPrint">Export PDF</button>
+  </div>
+</header>
+
+<div class="workspace">
+  <aside class="form-panel no-print">
+    <section class="section">
+      <div class="section-title">Request Details</div>
+      <div class="field">
+        <label for="changeTitle">Change Title</label>
+        <input id="changeTitle" type="text" placeholder="Core switch firmware update">
+      </div>
+      <div class="field row-2">
+        <div>
+          <label for="changeId">Change Reference</label>
+          <input id="changeId" type="text" placeholder="CR-2026-031">
+        </div>
+        <div>
+          <label for="requestor">Requested By</label>
+          <input id="requestor" type="text" placeholder="Alex Patel">
+        </div>
+      </div>
+      <div class="field row-2">
+        <div>
+          <label for="environment">Environment</label>
+          <select id="environment">
+            <option value="Production">Production</option>
+            <option value="Staging">Staging</option>
+            <option value="Development">Development</option>
+            <option value="Mixed">Mixed</option>
+          </select>
+        </div>
+        <div>
+          <label for="risk">Risk Level</label>
+          <select id="risk">
+            <option value="Low">Low</option>
+            <option value="Medium" selected>Medium</option>
+            <option value="High">High</option>
+            <option value="Critical">Critical</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-title">Maintenance Window</div>
+      <div class="field row-3">
+        <div>
+          <label for="windowDate">Date</label>
+          <input id="windowDate" type="date">
+        </div>
+        <div>
+          <label for="windowStart">Start Time</label>
+          <input id="windowStart" type="time">
+        </div>
+        <div>
+          <label for="windowEnd">End Time</label>
+          <input id="windowEnd" type="time">
+        </div>
+      </div>
+      <div class="field">
+        <label for="timezone">Time Zone</label>
+        <input id="timezone" type="text" placeholder="Europe/London (BST)">
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-title">Required Content</div>
+      <div class="field">
+        <label for="changeSummary">Change Summary</label>
+        <textarea id="changeSummary" placeholder="Briefly describe the change and expected business outcome."></textarea>
+      </div>
+      <div class="field">
+        <label for="affectedSystems">Affected Systems</label>
+        <textarea id="affectedSystems" placeholder="One system per line, e.g.&#10;Core-SW-01&#10;Core-SW-02&#10;WAN edge firewall"></textarea>
+      </div>
+      <div class="field">
+        <label for="implementationSteps">Implementation Steps</label>
+        <textarea id="implementationSteps" placeholder="One step per line, in execution order."></textarea>
+      </div>
+      <div class="field">
+        <label for="rollbackPlan">Rollback Plan</label>
+        <textarea id="rollbackPlan" placeholder="How to restore service if the change fails."></textarea>
+      </div>
+      <div class="field">
+        <label for="approvals">Approval Contacts</label>
+        <textarea id="approvals" placeholder="Name - role - contact details (one per line)"></textarea>
+      </div>
+      <div class="field">
+        <label for="notes">Additional Notes</label>
+        <textarea id="notes" placeholder="Testing evidence, impact notes, user comms, dependencies."></textarea>
+      </div>
+      <p class="hint">The preview updates live and prints as a clean attachment-ready document.</p>
+    </section>
+  </aside>
+
+  <main class="preview-wrap">
+    <article class="paper" id="outputDocument">
+      <header class="paper-head">
+        <div>
+          <div class="paper-brand">Field-Kit Change Control</div>
+          <h1 class="paper-title" id="outTitle">Change Request</h1>
+          <p class="paper-sub">Prepared for CAB review, ticket attachment, and email circulation.</p>
+        </div>
+        <div class="status-pill" id="outRisk">Risk: Medium</div>
+      </header>
+
+      <section class="meta-grid">
+        <div class="meta">
+          <div class="meta-label">Reference</div>
+          <div class="meta-value" id="outId">-</div>
+        </div>
+        <div class="meta">
+          <div class="meta-label">Requested By</div>
+          <div class="meta-value" id="outRequestor">-</div>
+        </div>
+        <div class="meta">
+          <div class="meta-label">Environment</div>
+          <div class="meta-value" id="outEnv">Production</div>
+        </div>
+      </section>
+
+      <section class="block">
+        <h2 class="block-title">Maintenance Window</h2>
+        <div class="block-content" id="outWindow">Date TBD, time TBD</div>
+      </section>
+
+      <section class="block">
+        <h2 class="block-title">Change Summary</h2>
+        <div class="block-content" id="outSummary">No summary provided.</div>
+      </section>
+
+      <section class="block">
+        <h2 class="block-title">Affected Systems</h2>
+        <ul class="list-items" id="outSystems">
+          <li>No systems listed.</li>
+        </ul>
+      </section>
+
+      <section class="block">
+        <h2 class="block-title">Implementation Steps</h2>
+        <ol class="list-items numbered" id="outSteps">
+          <li>No implementation steps listed.</li>
+        </ol>
+      </section>
+
+      <section class="block">
+        <h2 class="block-title">Rollback Plan</h2>
+        <div class="block-content" id="outRollback">No rollback plan provided.</div>
+      </section>
+
+      <section class="block">
+        <h2 class="block-title">Approval Contacts</h2>
+        <ul class="list-items" id="outApprovals">
+          <li>No approval contacts listed.</li>
+        </ul>
+      </section>
+
+      <section class="block">
+        <h2 class="block-title">Additional Notes</h2>
+        <div class="block-content" id="outNotes">None.</div>
+      </section>
+
+      <div class="watermark">Generated by Field-Kit - field-kit.co.uk</div>
+    </article>
+  </main>
+</div>
+
+<script>
+  const fields = {
+    changeTitle: document.getElementById('changeTitle'),
+    changeId: document.getElementById('changeId'),
+    requestor: document.getElementById('requestor'),
+    environment: document.getElementById('environment'),
+    risk: document.getElementById('risk'),
+    windowDate: document.getElementById('windowDate'),
+    windowStart: document.getElementById('windowStart'),
+    windowEnd: document.getElementById('windowEnd'),
+    timezone: document.getElementById('timezone'),
+    changeSummary: document.getElementById('changeSummary'),
+    affectedSystems: document.getElementById('affectedSystems'),
+    implementationSteps: document.getElementById('implementationSteps'),
+    rollbackPlan: document.getElementById('rollbackPlan'),
+    approvals: document.getElementById('approvals'),
+    notes: document.getElementById('notes')
+  };
+
+  const out = {
+    title: document.getElementById('outTitle'),
+    id: document.getElementById('outId'),
+    requestor: document.getElementById('outRequestor'),
+    env: document.getElementById('outEnv'),
+    risk: document.getElementById('outRisk'),
+    window: document.getElementById('outWindow'),
+    summary: document.getElementById('outSummary'),
+    systems: document.getElementById('outSystems'),
+    steps: document.getElementById('outSteps'),
+    rollback: document.getElementById('outRollback'),
+    approvals: document.getElementById('outApprovals'),
+    notes: document.getElementById('outNotes')
+  };
+
+  function safeText(value, fallback) {
+    const text = value.trim();
+    return text ? text : fallback;
+  }
+
+  function splitLines(value) {
+    return value
+      .split('\n')
+      .map(function(line) { return line.trim(); })
+      .filter(function(line) { return line.length > 0; });
+  }
+
+  function renderList(element, lines, fallback) {
+    element.innerHTML = '';
+    if (!lines.length) {
+      const li = document.createElement('li');
+      li.textContent = fallback;
+      element.appendChild(li);
+      return;
+    }
+
+    lines.forEach(function(line) {
+      const li = document.createElement('li');
+      li.textContent = line;
+      element.appendChild(li);
+    });
+  }
+
+  function formatDate(dateValue) {
+    if (!dateValue) {
+      return 'Date TBD';
+    }
+    const parts = dateValue.split('-');
+    if (parts.length !== 3) {
+      return dateValue;
+    }
+    return parts[2] + '/' + parts[1] + '/' + parts[0];
+  }
+
+  function formatTime(value) {
+    return value ? value : 'TBD';
+  }
+
+  function updatePreview() {
+    out.title.textContent = safeText(fields.changeTitle.value, 'Change Request');
+    out.id.textContent = safeText(fields.changeId.value, '-');
+    out.requestor.textContent = safeText(fields.requestor.value, '-');
+    out.env.textContent = fields.environment.value;
+
+    const risk = fields.risk.value;
+    out.risk.textContent = 'Risk: ' + risk;
+
+    const windowText =
+      formatDate(fields.windowDate.value) +
+      ', ' +
+      formatTime(fields.windowStart.value) +
+      ' - ' +
+      formatTime(fields.windowEnd.value) +
+      ', ' +
+      safeText(fields.timezone.value, 'Timezone TBD');
+    out.window.textContent = windowText;
+
+    out.summary.textContent = safeText(fields.changeSummary.value, 'No summary provided.');
+    renderList(out.systems, splitLines(fields.affectedSystems.value), 'No systems listed.');
+    renderList(out.steps, splitLines(fields.implementationSteps.value), 'No implementation steps listed.');
+    out.rollback.textContent = safeText(fields.rollbackPlan.value, 'No rollback plan provided.');
+    renderList(out.approvals, splitLines(fields.approvals.value), 'No approval contacts listed.');
+    out.notes.textContent = safeText(fields.notes.value, 'None.');
+  }
+
+  Object.keys(fields).forEach(function(key) {
+    fields[key].addEventListener('input', updatePreview);
+    fields[key].addEventListener('change', updatePreview);
+  });
+
+  document.getElementById('btnPrint').addEventListener('click', function() {
+    window.print();
+  });
+
+  document.getElementById('btnReset').addEventListener('click', function() {
+    if (!window.confirm('Clear all fields and start a new change request?')) {
+      return;
+    }
+    Object.keys(fields).forEach(function(key) {
+      const el = fields[key];
+      if (el.tagName === 'SELECT') {
+        el.selectedIndex = 0;
+      } else {
+        el.value = '';
+      }
+    });
+    fields.risk.value = 'Medium';
+    fields.environment.value = 'Production';
+    updatePreview();
+  });
+
+  fields.windowDate.valueAsDate = new Date();
+  fields.timezone.value = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  updatePreview();
+</script>
+
+</body>
+</html>

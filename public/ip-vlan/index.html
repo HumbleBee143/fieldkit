@@ -353,12 +353,7 @@
           Site Name
           <input id="siteName" placeholder="Example: HQ Core" aria-label="Site name">
         </label>
-        <label class="col-2">
-          Pro Key
-          <input id="proKeyInput" placeholder="VALID_KEY" aria-label="Pro key">
-        </label>
-        <button id="saveProKeyBtn" class="btn-ghost col-2" type="button">Save Pro Key</button>
-        <button id="toggleWatermarkBtn" class="btn-ghost col-2" type="button" disabled>Hide Watermark (Pro)</button>
+        <button id="toggleWatermarkBtn" class="btn-ghost col-2" type="button">Hide Watermark</button>
       </div>
       <div class="toolbar actions" style="margin-top:10px;">
         <button id="addVlanBtn" class="btn-primary col-2" type="button">Add VLAN</button>
@@ -435,8 +430,6 @@
         chipUsed: document.getElementById("chipUsed"),
         chipFree: document.getElementById("chipFree"),
         chipConflicts: document.getElementById("chipConflicts"),
-        proKeyInput: document.getElementById("proKeyInput"),
-        saveProKeyBtn: document.getElementById("saveProKeyBtn"),
         toggleWatermarkBtn: document.getElementById("toggleWatermarkBtn")
       };
 
@@ -457,16 +450,10 @@
         window.print();
       });
 
-      el.saveProKeyBtn.addEventListener("click", function () {
-        localStorage.setItem("fieldkit_pro_key", el.proKeyInput.value.trim());
-        syncProState();
-      });
-
       el.toggleWatermarkBtn.addEventListener("click", function () {
-        if (!isProUnlocked()) return;
         state.watermarkHidden = !state.watermarkHidden;
         el.appRoot.classList.toggle("hide-watermark", state.watermarkHidden);
-        el.toggleWatermarkBtn.textContent = state.watermarkHidden ? "Show Watermark (Pro)" : "Hide Watermark (Pro)";
+        el.toggleWatermarkBtn.textContent = state.watermarkHidden ? "Show Watermark" : "Hide Watermark";
       });
 
       function row(vlanId, name, purpose, hostNeed) {
@@ -813,28 +800,12 @@
           .replace(/\"/g, "&quot;");
       }
 
-      function isProUnlocked() {
-        return localStorage.getItem("fieldkit_pro_key") === "VALID_KEY";
-      }
-
-      function syncProState() {
-        const unlocked = isProUnlocked();
-        el.toggleWatermarkBtn.disabled = !unlocked;
-
-        if (!unlocked && state.watermarkHidden) {
-          state.watermarkHidden = false;
-          el.appRoot.classList.remove("hide-watermark");
-          el.toggleWatermarkBtn.textContent = "Hide Watermark (Pro)";
-        }
-      }
-
       function updateTitle() {
         const suffix = el.siteName.value.trim();
         document.title = "Field-Kit | IP / VLAN Planner" + (suffix ? " | " + suffix : "");
       }
 
       renderTable();
-      syncProState();
       allocate();
       updateTitle();
     })();

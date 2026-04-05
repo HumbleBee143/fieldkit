@@ -631,19 +631,14 @@
       </section>
 
       <section class="section">
-        <h2 class="section-title">Branding + Pro</h2>
+        <h2 class="section-title">Branding</h2>
         <div class="field">
           <label for="companyName">Company Name</label>
           <input id="companyName" placeholder="Your MSP Ltd">
         </div>
-        <div class="field row-2">
-          <input id="proKeyInput" placeholder="VALID_KEY" aria-label="Pro key">
-          <button id="saveProKeyBtn" type="button" class="btn">Save Key</button>
-        </div>
-        <button id="uploadLogoBtn" type="button" class="btn">Upload Logo (Pro)</button>
+        <button id="uploadLogoBtn" type="button" class="btn">Upload Logo</button>
         <input id="logoInput" type="file" accept="image/*" hidden>
-        <button id="toggleWatermarkBtn" type="button" class="btn" style="margin-top:0.5rem;">Hide Watermark (Pro)</button>
-        <p class="pro-note">Pro controls unlock with a valid key in local storage. Watermark is always shown by default.</p>
+        <button id="toggleWatermarkBtn" type="button" class="btn" style="margin-top:0.5rem;">Hide Watermark</button>
       </section>
     </aside>
 
@@ -745,8 +740,6 @@
     uploadLogoBtn: document.getElementById("uploadLogoBtn"),
     logoInput: document.getElementById("logoInput"),
     logoPreview: document.getElementById("logoPreview"),
-    proKeyInput: document.getElementById("proKeyInput"),
-    saveProKeyBtn: document.getElementById("saveProKeyBtn"),
     toggleWatermarkBtn: document.getElementById("toggleWatermarkBtn"),
     companyName: document.getElementById("companyName"),
     companyNameOut: document.getElementById("companyNameOut"),
@@ -777,10 +770,6 @@
     technicianSignature: "technicianSignatureOut",
     clientSignature: "clientSignatureOut"
   };
-
-  function isProUnlocked() {
-    return localStorage.getItem("fieldkit_pro_key") === "VALID_KEY";
-  }
 
   function escapeHtml(value) {
     return String(value || "")
@@ -977,17 +966,8 @@
     setText("labourCostOut", labour == null ? "-" : money(labour));
   }
 
-  function applyProState() {
-    const unlocked = isProUnlocked();
-    el.uploadLogoBtn.disabled = !unlocked;
-    el.toggleWatermarkBtn.disabled = !unlocked;
-
-    if (!unlocked && state.watermarkHidden) {
-      state.watermarkHidden = false;
-      el.appRoot.classList.remove("hide-watermark");
-    }
-
-    el.toggleWatermarkBtn.textContent = state.watermarkHidden ? "Show Watermark (Pro)" : "Hide Watermark (Pro)";
+  function syncBrandingState() {
+    el.toggleWatermarkBtn.textContent = state.watermarkHidden ? "Show Watermark" : "Hide Watermark";
   }
 
   function renderPreview() {
@@ -1039,16 +1019,7 @@
 
   el.printBtn.addEventListener("click", () => window.print());
 
-  el.saveProKeyBtn.addEventListener("click", () => {
-    localStorage.setItem("fieldkit_pro_key", el.proKeyInput.value.trim());
-    applyProState();
-  });
-
   el.uploadLogoBtn.addEventListener("click", () => {
-    if (!isProUnlocked()) {
-      alert("Pro feature: enter a valid key first.");
-      return;
-    }
     el.logoInput.click();
   });
 
@@ -1064,18 +1035,14 @@
   });
 
   el.toggleWatermarkBtn.addEventListener("click", () => {
-    if (!isProUnlocked()) {
-      alert("Pro feature: enter a valid key first.");
-      return;
-    }
     state.watermarkHidden = !state.watermarkHidden;
     el.appRoot.classList.toggle("hide-watermark", state.watermarkHidden);
-    applyProState();
+    syncBrandingState();
   });
 
   renderTasksInputs();
   renderPartsInputs();
-  applyProState();
+  syncBrandingState();
   renderPreview();
 </script>
 </body>

@@ -196,15 +196,6 @@
     line-height: 1.35;
   }
 
-  .pro-lock {
-    border: 1px dashed var(--line);
-    border-radius: 8px;
-    padding: 0.55rem;
-    background: #0d1a30;
-  }
-
-  .pro-lock .hint { margin-top: 0.35rem; }
-
   .preview-wrap {
     overflow: auto;
     padding: 1rem;
@@ -384,7 +375,7 @@
     display: none;
   }
 
-  .watermark.hidden-by-pro { display: none !important; }
+  .watermark.hidden-by-toggle { display: none !important; }
 
   @media (max-width: 1040px) {
     .layout { grid-template-columns: 1fr; }
@@ -431,7 +422,7 @@
     }
 
     .watermark { display: block; }
-    .watermark.hidden-by-pro { display: none !important; }
+    .watermark.hidden-by-toggle { display: none !important; }
   }
 </style>
 </head>
@@ -569,26 +560,18 @@
         </div>
       </section>
 
-      <section class="section pro-lock">
-        <h2>Branding (Pro)</h2>
+      <section class="section">
+        <h2>Branding</h2>
         <div class="field">
-          <label for="proKey">Pro Key</label>
-          <input id="proKey" placeholder="Enter VALID_KEY to unlock">
-        </div>
-        <div class="field">
-          <button class="btn" id="unlockBtn" type="button">Unlock Pro</button>
-        </div>
-        <div class="field">
-          <label for="logoUpload">Upload Logo (Pro)</label>
-          <input id="logoUpload" type="file" accept="image/*" disabled>
+          <label for="logoUpload">Upload Logo</label>
+          <input id="logoUpload" type="file" accept="image/*">
         </div>
         <div class="field">
           <label>
-            <input id="hideWatermark" type="checkbox" disabled>
-            Hide watermark in export (Pro)
+            <input id="hideWatermark" type="checkbox">
+            Hide watermark in export
           </label>
         </div>
-        <p class="hint">Logo upload and watermark removal are available only with Pro key.</p>
       </section>
     </aside>
 
@@ -600,7 +583,7 @@
             <h1 class="sheet-title">Hardware Decommission Record</h1>
             <p class="sheet-sub">GDPR-aligned record for secure data destruction and disposal audit trails.</p>
           </div>
-          <div class="logo-box" id="logoBox">Logo (Pro)</div>
+          <div class="logo-box" id="logoBox">Logo</div>
         </div>
 
         <section class="grid-2">
@@ -687,10 +670,6 @@
 <script>
   const draftKey = 'fieldkit_hardware_decommission_draft';
 
-  function isProUnlocked() {
-    return localStorage.getItem('fieldkit_pro_key') === 'VALID_KEY';
-  }
-
   function formatDate(value) {
     if (!value) return '-';
     const d = new Date(value + 'T00:00:00');
@@ -716,16 +695,6 @@
     document.getElementById('certAuth').textContent = document.getElementById('outAuthoriserName').textContent;
     document.getElementById('certRole').textContent = document.getElementById('outAuthoriserRole').textContent;
     document.getElementById('certDate').textContent = document.getElementById('outCertificateDate').textContent;
-  }
-
-  function applyProState() {
-    const unlocked = isProUnlocked();
-    document.getElementById('logoUpload').disabled = !unlocked;
-    document.getElementById('hideWatermark').disabled = !unlocked;
-    if (!unlocked) {
-      document.getElementById('hideWatermark').checked = false;
-      document.getElementById('watermark').classList.remove('hidden-by-pro');
-    }
   }
 
   function collectInputs() {
@@ -808,31 +777,13 @@
   document.getElementById('saveDraftBtn').addEventListener('click', () => saveDraft());
   document.getElementById('clearBtn').addEventListener('click', () => clearForm());
 
-  document.getElementById('unlockBtn').addEventListener('click', () => {
-    const key = document.getElementById('proKey').value.trim();
-    if (key === 'VALID_KEY') {
-      localStorage.setItem('fieldkit_pro_key', 'VALID_KEY');
-      applyProState();
-    } else {
-      localStorage.removeItem('fieldkit_pro_key');
-      applyProState();
-      alert('Invalid Pro key.');
-    }
-  });
-
   document.getElementById('hideWatermark').addEventListener('change', (event) => {
     const watermark = document.getElementById('watermark');
-    if (!isProUnlocked()) {
-      event.target.checked = false;
-      watermark.classList.remove('hidden-by-pro');
-      return;
-    }
-    watermark.classList.toggle('hidden-by-pro', event.target.checked);
+    watermark.classList.toggle('hidden-by-toggle', event.target.checked);
     saveDraft();
   });
 
   document.getElementById('logoUpload').addEventListener('change', (event) => {
-    if (!isProUnlocked()) return;
     const file = event.target.files && event.target.files[0];
     if (!file) return;
     const reader = new FileReader();
@@ -852,7 +803,6 @@
     });
 
     loadDraft();
-    applyProState();
     refreshAllOutputs();
   })();
 </script>

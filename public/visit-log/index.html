@@ -361,29 +361,9 @@
     margin-top: 1rem;
   }
 
-  .pro-note {
-    margin-top: 0.4rem;
-    font-size: 0.68rem;
-    color: var(--muted);
-    line-height: 1.4;
+  .watermark.hidden-by-toggle {
+    display: none !important;
   }
-
-  .unlock-row {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 0.4rem;
-    margin-top: 0.4rem;
-  }
-
-  .status-badge {
-    margin-top: 0.35rem;
-    font-size: 0.65rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: #8fd8cc;
-  }
-
-  .status-badge.off { color: #7f95b1; }
 
   @media (max-width: 1040px) {
     .layout { grid-template-columns: 1fr; }
@@ -426,7 +406,6 @@
     }
 
     .watermark { display: block; }
-    .watermark.hidden-by-pro { display: none; }
   }
 </style>
 </head>
@@ -518,20 +497,14 @@
     </section>
 
     <section class="section">
-      <h2>Branding (Pro)</h2>
+      <h2>Branding</h2>
       <div class="field">
-        <label for="logoUpload">Upload Company Logo (Pro)</label>
+        <label for="logoUpload">Upload Company Logo</label>
         <input id="logoUpload" name="logoUpload" type="file" accept="image/*">
       </div>
       <div class="field">
-        <label><input id="toggleWatermark" type="checkbox"> Remove watermark on print (Pro)</label>
+        <label><input id="toggleWatermark" type="checkbox"> Hide watermark on print</label>
       </div>
-      <div class="unlock-row">
-        <input id="proKey" type="text" placeholder="Enter Gumroad licence key">
-        <button class="btn" id="btn-unlock" type="button">Unlock Pro</button>
-      </div>
-      <div id="proStatus" class="status-badge off">Pro Locked</div>
-      <p class="pro-note">Pro features are unlocked by a valid key stored in localStorage. Payment validation is handled externally.</p>
     </section>
   </aside>
 
@@ -542,7 +515,7 @@
           <h1 class="sheet-title">Technician Visit Log</h1>
           <p class="sheet-sub">Field service record for on-site technician activity.</p>
         </div>
-        <div class="logo-box" id="logoBox">Logo upload available with Pro</div>
+        <div class="logo-box" id="logoBox">No logo uploaded</div>
       </div>
 
       <div class="grid-2">
@@ -595,10 +568,6 @@
 </main>
 
 <script>
-  function isProUnlocked() {
-    return localStorage.getItem('fieldkit_pro_key') === 'VALID_KEY';
-  }
-
   const formIds = [
     'jobDate', 'arrivalTime', 'departureTime', 'travelTime', 'mileage',
     'technicianName', 'clientName', 'contactName', 'contactPhone',
@@ -611,7 +580,6 @@
   const logoUpload = document.getElementById('logoUpload');
   const logoBox = document.getElementById('logoBox');
   const toggleWatermark = document.getElementById('toggleWatermark');
-  const proStatus = document.getElementById('proStatus');
   const watermark = document.getElementById('watermark');
 
   const state = { logoDataUrl: '' };
@@ -709,28 +677,12 @@
     partsList.appendChild(row);
   }
 
-  function applyProUI() {
-    const unlocked = isProUnlocked();
-    logoUpload.disabled = !unlocked;
-    toggleWatermark.disabled = !unlocked;
-    proStatus.textContent = unlocked ? 'Pro Unlocked' : 'Pro Locked';
-    proStatus.className = unlocked ? 'status-badge' : 'status-badge off';
-
-    if (!unlocked) {
-      toggleWatermark.checked = false;
-      watermark.classList.remove('hidden-by-pro');
-      if (!state.logoDataUrl) {
-        logoBox.innerHTML = 'Logo upload available with Pro';
-      }
-    }
-  }
-
   function maybeHideWatermark() {
-    if (isProUnlocked() && toggleWatermark.checked) {
-      watermark.classList.add('hidden-by-pro');
+    if (toggleWatermark.checked) {
+      watermark.classList.add('hidden-by-toggle');
       return;
     }
-    watermark.classList.remove('hidden-by-pro');
+    watermark.classList.remove('hidden-by-toggle');
   }
 
   function exportCsv() {
@@ -790,21 +742,7 @@
     document.getElementById(id).addEventListener('input', updateOutput);
   });
 
-  document.getElementById('btn-unlock').addEventListener('click', () => {
-    const key = document.getElementById('proKey').value.trim();
-    if (!key) return;
-    localStorage.setItem('fieldkit_pro_key', key);
-    applyProUI();
-    maybeHideWatermark();
-  });
-
   logoUpload.addEventListener('change', (event) => {
-    if (!isProUnlocked()) {
-      event.target.value = '';
-      alert('Logo upload is a Pro feature.');
-      return;
-    }
-
     const file = event.target.files && event.target.files[0];
     if (!file) return;
     const reader = new FileReader();
@@ -816,16 +754,11 @@
   });
 
   toggleWatermark.addEventListener('change', () => {
-    if (!isProUnlocked()) {
-      toggleWatermark.checked = false;
-      alert('Watermark removal is a Pro feature.');
-      return;
-    }
     maybeHideWatermark();
   });
 
   addPartRow();
-  applyProUI();
+  maybeHideWatermark();
   updateOutput();
 </script>
 </body>

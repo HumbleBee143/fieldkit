@@ -499,16 +499,15 @@
         </div>
 
         <div class="field">
-          <label for="logoUpload">Company Logo (Pro)</label>
+          <label for="logoUpload">Company Logo</label>
           <input id="logoUpload" type="file" accept="image/*">
-          <div class="hint" id="proHint">Upload logos and hide watermark with Pro key.</div>
+          <div class="hint">Upload a logo for branded printouts.</div>
         </div>
 
         <div class="field inline-toggle">
           <input id="hideWatermark" type="checkbox">
-          <label for="hideWatermark" style="margin:0; text-transform:none; letter-spacing:0; font-size:0.76rem; color:#94b3d2;">Hide watermark on print (Pro)</label>
+          <label for="hideWatermark" style="margin:0; text-transform:none; letter-spacing:0; font-size:0.76rem; color:#94b3d2;">Hide watermark on print</label>
         </div>
-        <div class="hint">Set <code>localStorage.fieldkit_pro_key = 'VALID_KEY'</code> to unlock Pro controls.</div>
       </section>
 
       <section class="section">
@@ -581,11 +580,6 @@
   const logoSlot = document.getElementById('logoSlot');
   const hideWatermark = document.getElementById('hideWatermark');
   const watermark = document.getElementById('watermark');
-  const proHint = document.getElementById('proHint');
-
-  function isProUnlocked() {
-    return localStorage.getItem('fieldkit_pro_key') === 'VALID_KEY';
-  }
 
   function setToday() {
     const now = new Date();
@@ -674,19 +668,6 @@
     }
 
     watermark.classList.toggle('hide', hideWatermark.checked);
-  }
-
-  function applyProGating() {
-    const pro = isProUnlocked();
-    logoUpload.disabled = !pro;
-    hideWatermark.disabled = !pro;
-
-    if (!pro) {
-      hideWatermark.checked = false;
-      proHint.textContent = 'Upload logos and hide watermark with Pro key.';
-    } else {
-      proHint.textContent = 'Pro unlocked: logo upload and watermark toggle enabled.';
-    }
   }
 
   function escapeHtml(value) {
@@ -812,7 +793,6 @@
   });
 
   setToday();
-  applyProGating();
   buildLegend();
   ensurePorts(defaults.portCount);
   renderPortInputs();
